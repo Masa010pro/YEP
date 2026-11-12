@@ -9,10 +9,15 @@ import {
   AchievementBadge
 } from '../types/yep';
 
-export const SEED_HERO_IMAGE = '/src/assets/images/yep_hero_youth_learning_1794428115627.jpg';
-export const SEED_EXCHANGE_CLOUD_IMAGE = '/src/assets/images/yep_exchange_cloud_tech_1794428117839.jpg';
-export const SEED_EXCHANGE_AGRITECH_IMAGE = '/src/assets/images/yep_exchange_agritech_1794428117636.jpg';
-export const SEED_PARTNER_IMAGE = '/src/assets/images/yep_partner_employment_1794428118093.jpg';
+import heroYouthImg from '../assets/images/yep_hero_youth_learning_1794428115627.jpg';
+import exchangeCloudImg from '../assets/images/yep_exchange_cloud_tech_1794428117839.jpg';
+import exchangeAgritechImg from '../assets/images/yep_exchange_agritech_1794428117636.jpg';
+import partnerEmploymentImg from '../assets/images/yep_partner_employment_1794428118093.jpg';
+
+export const SEED_HERO_IMAGE = heroYouthImg;
+export const SEED_EXCHANGE_CLOUD_IMAGE = exchangeCloudImg;
+export const SEED_EXCHANGE_AGRITECH_IMAGE = exchangeAgritechImg;
+export const SEED_PARTNER_IMAGE = partnerEmploymentImg;
 
 export const INITIAL_USERS: UserProfile[] = [
   {

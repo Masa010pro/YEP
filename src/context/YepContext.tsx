@@ -20,7 +20,8 @@ import {
   INITIAL_OPPORTUNITIES,
   INITIAL_EXPRESSIONS_OF_INTEREST,
   INITIAL_AUDIT_LOGS,
-  INITIAL_ACHIEVEMENTS
+  INITIAL_ACHIEVEMENTS,
+  SEED_EXCHANGE_CLOUD_IMAGE
 } from '../data/seedData';
 
 interface YepContextType {
@@ -479,7 +480,7 @@ export const YepProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       summary: data.summary || '',
       learningOutcomes: data.learningOutcomes || ['Practical project delivery'],
       prerequisites: data.prerequisites || 'None',
-      bannerImage: data.bannerImage || '/src/assets/images/yep_exchange_cloud_tech_1794428117839.jpg',
+      bannerImage: data.bannerImage || SEED_EXCHANGE_CLOUD_IMAGE,
       assignmentTitle: data.assignmentTitle || 'Final Practical Capstone Project',
       assignmentPrompt: data.assignmentPrompt || 'Complete the capstone according to the 1-5 rubric.',
       sessions: data.sessions || [],

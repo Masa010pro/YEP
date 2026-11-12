@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useYep } from '../../context/YepContext';
 import { UserAvatar } from '../common/UserAvatar';
+import { generateParticipantFallback, ParticipantAIContext } from '../../utils/aiFallback';
 import {
   Sparkles,
   Send,
@@ -100,58 +101,58 @@ export const ParticipantAIAssistant: React.FC = () => {
     setInputMessage('');
     setIsLoading(true);
 
-    try {
-      // Assemble full real-time system context
-      const participantContext = {
-        currentUser: {
-          id: currentUser.id,
-          name: currentUser.name,
-          email: currentUser.email,
-          role: currentUser.role,
-          age: currentUser.age,
-          region: currentUser.region,
-          skills: currentUser.skills,
-          interests: currentUser.interests,
-          careerGoal: currentUser.careerGoal,
-          bio: currentUser.bio,
-          consentDataSharing: currentUser.consentDataSharing
-        },
-        opportunities: opportunities.map(o => ({
-          id: o.id,
-          title: o.title,
-          partnerName: o.partnerName,
-          type: o.type,
-          locationType: o.locationType,
-          region: o.region,
-          stipendOrSalary: o.stipendOrSalary,
-          requirements: o.requirements,
-          description: o.description,
-          status: o.status
-        })),
-        exchanges: exchanges.map(e => ({
-          id: e.id,
-          title: e.title,
-          theme: e.theme,
-          skillLevel: e.skillLevel,
-          format: e.format,
-          facilitatorName: e.facilitatorName,
-          facilitatorOrg: e.facilitatorOrg,
-          capacityMax: e.capacityMax,
-          enrolledCount: e.enrolledCount,
-          scheduleSummary: e.scheduleSummary,
-          summary: e.summary,
-          learningOutcomes: e.learningOutcomes,
-          status: e.status
-        })),
-        enrollments: enrollments.filter(e => e.participantId === currentUser.id),
-        submissions: submissions.filter(s => s.participantId === currentUser.id).map(s => ({
-          id: s.id,
-          title: s.title,
-          status: s.status,
-          grade: s.grade
-        }))
-      };
+    // Assemble full real-time system context
+    const participantContext: ParticipantAIContext = {
+      currentUser: {
+        id: currentUser.id,
+        name: currentUser.name,
+        email: currentUser.email,
+        role: currentUser.role,
+        age: currentUser.age,
+        region: currentUser.region,
+        skills: currentUser.skills,
+        interests: currentUser.interests,
+        careerGoal: currentUser.careerGoal,
+        bio: currentUser.bio,
+        consentDataSharing: currentUser.consentDataSharing
+      },
+      opportunities: opportunities.map(o => ({
+        id: o.id,
+        title: o.title,
+        partnerName: o.partnerName,
+        type: o.type,
+        locationType: o.locationType,
+        region: o.region,
+        stipendOrSalary: o.stipendOrSalary,
+        requirements: o.requirements,
+        description: o.description,
+        status: o.status
+      })),
+      exchanges: exchanges.map(e => ({
+        id: e.id,
+        title: e.title,
+        theme: e.theme,
+        skillLevel: e.skillLevel,
+        format: e.format,
+        facilitatorName: e.facilitatorName,
+        facilitatorOrg: e.facilitatorOrg,
+        capacityMax: e.capacityMax,
+        enrolledCount: e.enrolledCount,
+        scheduleSummary: e.scheduleSummary,
+        summary: e.summary,
+        learningOutcomes: e.learningOutcomes,
+        status: e.status
+      })),
+      enrollments: enrollments.filter(e => e.participantId === currentUser.id),
+      submissions: submissions.filter(s => s.participantId === currentUser.id).map(s => ({
+        id: s.id,
+        title: s.title,
+        status: s.status,
+        grade: s.grade
+      }))
+    };
 
+    try {
       const historyPayload = messages.slice(-6).map(m => ({
         role: m.sender === 'user' ? 'user' : 'model',
         text: m.text
@@ -168,24 +169,23 @@ export const ParticipantAIAssistant: React.FC = () => {
       });
 
       if (!res.ok) {
-        throw new Error(`Server returned HTTP ${res.status}`);
+        throw new Error(`Static mode (${res.status})`);
       }
 
       const data = await res.json();
       const assistantMsg: ChatMessage = {
         id: `ai-${Date.now()}`,
         sender: 'assistant',
-        text: data.reply || 'I reviewed your request against current project records.',
+        text: data.reply || generateParticipantFallback(text, participantContext),
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       };
       setMessages(prev => [...prev, assistantMsg]);
-    } catch (err: any) {
-      console.error('Participant AI error:', err);
-      // Resilient fallback using client state
+    } catch {
+      // Seamless pure-natural-language static/GitHub Pages fallback grounded in system state
       const fallbackMsg: ChatMessage = {
         id: `ai-${Date.now()}`,
         sender: 'assistant',
-        text: `Based on your profile skills (${currentUser.skills.join(', ')}):\n\n- You have **${opportunities.length} active opportunities** on the partner board (including ${opportunities[0]?.title || 'software & data roles'}).\n- You have **${exchanges.length} virtual learning exchanges** available to accelerate your progress.\n- Explicit portfolio consent is currently **${currentUser.consentDataSharing ? 'granted' : 'withheld'}** on your profile.`,
+        text: generateParticipantFallback(text, participantContext),
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       };
       setMessages(prev => [...prev, fallbackMsg]);

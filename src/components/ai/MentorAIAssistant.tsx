@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useYep } from '../../context/YepContext';
 import { UserAvatar } from '../common/UserAvatar';
+import { generateMentorFallback, MentorAIContext } from '../../utils/aiFallback';
 import {
   Sparkles,
   Users,
@@ -106,24 +107,24 @@ export const MentorAIAssistant: React.FC = () => {
     setIsLoading(true);
     setInputQuery('');
 
-    try {
-      const mentorContext = {
-        mentor: {
-          name: currentUser.name,
-          title: currentUser.titleOrOrg,
-          region: currentUser.region
-        },
-        cohortParticipants,
-        assignedExchanges: assignedExchanges.map(e => ({
-          title: e.title,
-          skillLevel: e.skillLevel,
-          enrolledCount: e.enrolledCount,
-          capacityMax: e.capacityMax
-        })),
-        pendingReviewsCount: relevantSubmissions.filter(s => s.status === 'under_review' || s.status === 'submitted').length,
-        evaluatedSubmissionsCount: relevantSubmissions.filter(s => s.status === 'graded').length
-      };
+    const mentorContext: MentorAIContext = {
+      mentor: {
+        name: currentUser.name,
+        title: currentUser.titleOrOrg,
+        region: currentUser.region
+      },
+      cohortParticipants,
+      assignedExchanges: assignedExchanges.map(e => ({
+        title: e.title,
+        skillLevel: e.skillLevel,
+        enrolledCount: e.enrolledCount,
+        capacityMax: e.capacityMax
+      })),
+      pendingReviewsCount: relevantSubmissions.filter(s => s.status === 'under_review' || s.status === 'submitted').length,
+      evaluatedSubmissionsCount: relevantSubmissions.filter(s => s.status === 'graded').length
+    };
 
+    try {
       const res = await fetch('/api/ai/mentor-assistant', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -134,7 +135,7 @@ export const MentorAIAssistant: React.FC = () => {
       });
 
       if (!res.ok) {
-        throw new Error(`Server returned HTTP ${res.status}`);
+        throw new Error(`Static mode (${res.status})`);
       }
 
       const data = await res.json();
@@ -143,20 +144,18 @@ export const MentorAIAssistant: React.FC = () => {
         type: mode,
         title,
         query: prompt,
-        response: data.reply || 'Analysis completed based on current cohort metrics.',
+        response: data.reply || generateMentorFallback(prompt, mentorContext, targetGroupSize),
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       };
 
       setAnalysisHistory(prev => [newRecord, ...prev]);
-    } catch (err: any) {
-      console.error('Mentor AI Assistant error:', err);
-      // Fallback
+    } catch {
       const fallbackRecord: AIResponseRecord = {
         id: `rec-${Date.now()}`,
         type: mode,
-        title: `${title} (Local System Grounding)`,
+        title: `${title} (System-Grounded Engine)`,
         query: prompt,
-        response: `Analysis based on ${cohortParticipants.length} enrolled participants:\n\n- Beginner Tier: ${cohortParticipants.filter(p => p.level === 'Beginner').length}\n- Intermediate Tier: ${cohortParticipants.filter(p => p.level === 'Intermediate').length}\n- Advanced Tier: ${cohortParticipants.filter(p => p.level === 'Advanced').length}\n\nRecommended Pairings:\n1. Squad A: ${cohortParticipants.slice(0, targetGroupSize).map(p => `${p.name} (${p.level})`).join(' + ')}\n2. Squad B: ${cohortParticipants.slice(targetGroupSize, targetGroupSize * 2).map(p => `${p.name} (${p.level})`).join(' + ') || 'Remaining cohort participants'}\n\nPedagogical Synergies: Groups combine complementary development strengths with high rubric accountability.`,
+        response: generateMentorFallback(prompt, mentorContext, targetGroupSize),
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       };
       setAnalysisHistory(prev => [fallbackRecord, ...prev]);

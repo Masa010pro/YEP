@@ -90,3 +90,33 @@ To create an optimized production build:
 npm run build
 npm run preview
 ```
+
+---
+
+## 🌐 Deploy Publicly via GitHub Pages & Student Developer Pack
+
+This repository includes an automated GitHub Actions workflow (`.github/workflows/deploy.yml`) that builds the static production bundle and publishes it to your `*.github.io` domain on every push to `main`.
+
+### 1. Push to Your Existing Empty GitHub Repository
+```bash
+git init
+git add .
+git commit -m "Initial commit: YEP Platform"
+git branch -M main
+git remote add origin https://github.com/<YOUR_USERNAME>/<YOUR_REPO_NAME>.git
+git push -u origin main
+```
+
+### 2. Enable GitHub Pages (GitHub Actions Source)
+1. Open your repository on **GitHub.com**.
+2. Go to **Settings** → **Pages**.
+3. Under **Build and deployment → Source**, select **GitHub Actions**.
+4. Your app will automatically build and deploy to:
+   `https://<YOUR_USERNAME>.github.io/<YOUR_REPO_NAME>/`
+
+*(With your active **GitHub Student Developer Pack**, GitHub Pro allows publishing GitHub Pages even from private repositories.)*
+
+### 3. Optional: Connect Student Cloud Host or Custom Domain
+- **Free Student Domain (`.me` / `.tech`)**: Claim a free domain via Namecheap or Name.com in the [GitHub Student Developer Pack](https://education.github.com/pack), point its DNS `CNAME` record to `<YOUR_USERNAME>.github.io`, and enter the domain under **Settings → Pages → Custom domain**.
+- **Full-Stack Cloud Hosting (Azure / DigitalOcean)**: If you want the server-side Gemini 3.8 Flash API (`server.ts`) active online, deploy the same GitHub repository to **DigitalOcean App Platform** ($200 Student Pack credit) or **Azure App Service / Static Web Apps** ($100 Azure for Students credit), setting start command `npm start` and environment variable `GEMINI_API_KEY`.
+

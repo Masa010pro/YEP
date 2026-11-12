@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useYep } from '../../context/YepContext';
 import { ProjectSubmission, RubricScores, VirtualSession } from '../../types/yep';
 import { UserAvatar } from '../common/UserAvatar';
+import { MentorAIAssistant } from '../ai/MentorAIAssistant';
 import {
   Calendar,
   CheckCircle,
@@ -581,6 +582,9 @@ export const MentorWorkspace: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Facilitator AI Diagnostic & Grouping Assistant */}
+      <MentorAIAssistant />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Left Column (2 Cols): Review Queue */}

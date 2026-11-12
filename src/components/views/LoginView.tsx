@@ -7,13 +7,11 @@ import {
   Briefcase,
   Shield,
   ArrowRight,
-  Terminal,
   AlertCircle,
   Sparkles,
   Lock,
   Mail,
-  ExternalLink,
-  Laptop
+  ExternalLink
 } from 'lucide-react';
 
 interface LoginViewProps {
@@ -26,7 +24,6 @@ export const LoginView: React.FC<LoginViewProps> = ({ onOpenRegisterModal }) => 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [showLocalGuide, setShowLocalGuide] = useState(false);
 
   const handleFormLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -284,73 +281,6 @@ export const LoginView: React.FC<LoginViewProps> = ({ onOpenRegisterModal }) => 
             )}
           </div>
         </div>
-
-        {/* Local Machine Host & Testing Guide Strip */}
-        <div className="p-4 bg-slate-900 text-slate-200 rounded-2xl border border-slate-800 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-slate-800 rounded-lg text-emerald-400 shrink-0">
-              <Laptop className="w-4 h-4" />
-            </div>
-            <div>
-              <div className="font-semibold text-white">
-                Test Locally on Your Machine via localhost:3000
-              </div>
-              <div className="text-slate-400 text-[11px] mt-0.5">
-                Run the complete system on Node.js with local persistence, zero cloud dependencies, and fast HMR.
-              </div>
-            </div>
-          </div>
-
-          <button
-            onClick={() => setShowLocalGuide(!showLocalGuide)}
-            className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded-lg font-medium text-xs transition-colors cursor-pointer shrink-0 border border-slate-700 flex items-center gap-1.5"
-          >
-            <Terminal className="w-3.5 h-3.5 text-emerald-400" />
-            <span>{showLocalGuide ? 'Hide Instructions' : 'View Localhost Guide'}</span>
-          </button>
-        </div>
-
-        {/* Expandable Localhost Guide */}
-        {showLocalGuide && (
-          <div className="p-6 bg-slate-950 text-slate-200 rounded-2xl border border-slate-800 space-y-4 text-xs">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-2">
-              <span className="font-bold text-white text-sm">
-                Steps to Run the Entire YEP Platform on Localhost
-              </span>
-              <span className="text-[11px] text-emerald-400 font-mono">Node.js 18+ · Vite 8</span>
-            </div>
-
-            <ol className="space-y-3 text-slate-300">
-              <li>
-                <strong>1. Clone or copy project files to your workstation:</strong>
-                <pre className="mt-1 p-2.5 bg-slate-900 rounded font-mono text-[11px] text-emerald-300 overflow-x-auto">
-                  git clone &lt;your-repo-url&gt; &amp;&amp; cd &lt;project-folder&gt;
-                </pre>
-              </li>
-              <li>
-                <strong>2. Install all dependencies:</strong>
-                <pre className="mt-1 p-2.5 bg-slate-900 rounded font-mono text-[11px] text-emerald-300 overflow-x-auto">
-                  npm install
-                </pre>
-              </li>
-              <li>
-                <strong>3. Start the local development server:</strong>
-                <pre className="mt-1 p-2.5 bg-slate-900 rounded font-mono text-[11px] text-emerald-300 overflow-x-auto">
-                  npm run dev
-                </pre>
-              </li>
-              <li>
-                <strong>4. Open in your local web browser:</strong>
-                <pre className="mt-1 p-2.5 bg-slate-900 rounded font-mono text-[11px] text-amber-300 overflow-x-auto">
-                  http://localhost:3000
-                </pre>
-              </li>
-            </ol>
-            <p className="text-[11px] text-slate-400 pt-2 border-t border-slate-800">
-              Note: State is stored locally in your browser's LocalStorage. You can test submissions, grade rubrics, publish opportunities, and export M&E CSV reports completely offline or on localhost.
-            </p>
-          </div>
-        )}
       </div>
     </div>
   );

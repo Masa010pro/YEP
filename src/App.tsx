@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { YepProvider, useYep } from './context/YepContext';
 import { Header } from './components/layout/Header';
-import { Footer } from './components/layout/Footer';
 import { LoginView } from './components/views/LoginView';
 import { LandingView } from './components/views/LandingView';
 import { ExchangeCatalogView } from './components/views/ExchangeCatalogView';
@@ -69,9 +68,6 @@ const MainContent: React.FC = () => {
 
         {currentUser && activeTab === 'admin' && <AdminControlCenter />}
       </main>
-
-      {/* Footer */}
-      <Footer />
 
       {/* Exchange Detail View Modal */}
       {selectedExchange && (

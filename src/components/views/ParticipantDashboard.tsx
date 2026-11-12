@@ -14,9 +14,12 @@ import {
   Send,
   Download,
   AlertTriangle,
-  FileCheck
+  FileCheck,
+  Bot,
+  Sparkles
 } from 'lucide-react';
 import { UserAvatar } from '../common/UserAvatar';
+import { ParticipantAIAssistant } from '../ai/ParticipantAIAssistant';
 
 interface ParticipantDashboardProps {
   onSelectExchange: (exchange: VirtualExchange) => void;
@@ -155,6 +158,28 @@ export const ParticipantDashboard: React.FC<ParticipantDashboardProps> = ({
             </div>
             <div className="text-[11px] text-slate-400">Verified credentials</div>
           </div>
+        </div>
+      </div>
+
+      {/* Participant AI Advisor & Opportunity Matcher Spotlight */}
+      <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-emerald-950 rounded-2xl p-6 text-white shadow-sm border border-slate-700/60 flex flex-col md:flex-row md:items-center justify-between gap-5">
+        <div className="space-y-1.5 max-w-2xl">
+          <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-emerald-400 uppercase tracking-wider">
+            <Sparkles className="w-3.5 h-3.5" />
+            <span>AI Project & Opportunity Advisor</span>
+          </div>
+          <h2 className="text-base sm:text-lg font-bold tracking-tight">
+            Ask questions & match any system opportunities or learning projects in natural language
+          </h2>
+          <p className="text-xs text-slate-300 leading-relaxed">
+            Need guidance matching partner openings with your skills ({currentUser.skills.slice(0, 3).join(', ')}), exploring virtual exchanges, or understanding capstone rubric evaluations? The AI advisor is grounded in active platform data.
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2 text-xs shrink-0">
+          <span className="text-[11px] text-emerald-300 font-mono bg-emerald-900/60 border border-emerald-700/50 px-2.5 py-1 rounded-lg">
+            Use floating advisor anytime ↘
+          </span>
         </div>
       </div>
 
@@ -490,6 +515,9 @@ export const ParticipantDashboard: React.FC<ParticipantDashboardProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Grounded Participant AI Advisor Floating Assistant */}
+      <ParticipantAIAssistant />
     </div>
   );
 };

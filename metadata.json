@@ -1,0 +1,6 @@
+{
+  "name": "Youth Empowerment Project (YEP) Platform",
+  "description": "Role-based youth empowerment platform connecting young people (18–35) with virtual learning exchanges, mentor rubrics, partner opportunity boards, and programmatic impact auditing.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

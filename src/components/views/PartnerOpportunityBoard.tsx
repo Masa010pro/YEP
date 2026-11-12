@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useYep } from '../../context/YepContext';
+import { useLanguage } from '../../context/LanguageContext';
 import { PartnerOpportunity, ExpressionOfInterest, OpportunityType, LocationType } from '../../types/yep';
 import { UserAvatar } from '../common/UserAvatar';
 import {
@@ -25,6 +26,7 @@ export const PartnerOpportunityBoard: React.FC = () => {
     sendApplicantMessage,
     updateApplicantStatus
   } = useYep();
+  const { t } = useLanguage();
 
   // State for posting new opportunity
   const [isPostingModalOpen, setIsPostingModalOpen] = useState(false);
@@ -108,13 +110,13 @@ export const PartnerOpportunityBoard: React.FC = () => {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div>
             <div className="text-xs font-semibold text-indigo-700 tracking-wide uppercase mb-1">
-              Employment & Industry Linkages
+              {t('Employment & Industry Linkages')}
             </div>
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
-              Partner Opportunity Board
+              {t('Partner Opportunity Board')}
             </h1>
             <p className="text-sm text-slate-600 mt-1 max-w-2xl leading-relaxed">
-              Connecting qualified young participants with vetted entry-level digital roles, paid internships, and freelance gigs. Fully governed by explicit consent data-sharing rules.
+              {t('Connecting qualified young participants with vetted entry-level digital roles, paid internships, and freelance gigs. Fully governed by explicit consent data-sharing rules.')}
             </p>
           </div>
 
@@ -125,7 +127,7 @@ export const PartnerOpportunityBoard: React.FC = () => {
                 className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-lg transition-colors cursor-pointer flex items-center gap-1.5 shadow-xs"
               >
                 <Plus className="w-3.5 h-3.5" />
-                <span>Publish New Digital Opening</span>
+                <span>{t('Publish New Digital Opening')}</span>
               </button>
             )}
           </div>
@@ -134,28 +136,28 @@ export const PartnerOpportunityBoard: React.FC = () => {
         {/* Tabular Metric Strip */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-6 mt-6 border-t border-slate-100 text-xs">
           <div>
-            <div className="text-slate-500">Published Openings</div>
+            <div className="text-slate-500">{t('Published Openings')}</div>
             <div className="text-2xl font-bold text-slate-900 font-mono tabular-nums mt-0.5">
               {opportunities.length}
             </div>
             <div className="text-[11px] text-slate-400">Vetted employers & NGOs</div>
           </div>
           <div>
-            <div className="text-slate-500">Expressions of Interest</div>
+            <div className="text-slate-500">{t('Expressions of Interest')}</div>
             <div className="text-2xl font-bold text-slate-900 font-mono tabular-nums mt-0.5">
               {expressionsOfInterest.length}
             </div>
             <div className="text-[11px] text-slate-400">Candidate applications</div>
           </div>
           <div>
-            <div className="text-slate-500">Consent Compliance</div>
+            <div className="text-slate-500">{t('Consent Compliance')}</div>
             <div className="text-2xl font-bold text-emerald-700 font-mono tabular-nums mt-0.5">
               100%
             </div>
             <div className="text-[11px] text-slate-400">Zero default data exposure</div>
           </div>
           <div>
-            <div className="text-slate-500">Interviews Invited</div>
+            <div className="text-slate-500">{t('Interviews Invited')}</div>
             <div className="text-2xl font-bold text-indigo-700 font-mono tabular-nums mt-0.5">
               {expressionsOfInterest.filter(e => e.status === 'interview_invited').length}
             </div>
@@ -170,7 +172,7 @@ export const PartnerOpportunityBoard: React.FC = () => {
         <div className="lg:col-span-2 space-y-6">
           <div className="flex items-center justify-between">
             <h2 className="text-base font-bold text-slate-900">
-              Active Vetted Openings ({opportunities.length})
+              {t('Active Vetted Openings')} ({opportunities.length})
             </h2>
             <span className="text-xs text-slate-500">Strictly Fair Compensation & Growth</span>
           </div>
@@ -243,14 +245,14 @@ export const PartnerOpportunityBoard: React.FC = () => {
                         {hasApplied ? (
                           <div className="px-3.5 py-1.5 bg-emerald-50 text-emerald-800 rounded-lg text-xs font-medium border border-emerald-200 flex items-center gap-1.5">
                             <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
-                            <span>Interest Expressed</span>
+                            <span>{t('Interest Expressed')}</span>
                           </div>
                         ) : (
                           <button
                             onClick={() => setEoiModalOpp(opp)}
                             className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-lg transition-colors cursor-pointer shadow-xs"
                           >
-                            Express Interest
+                            {t('Express Interest')}
                           </button>
                         )}
                       </div>
@@ -269,7 +271,7 @@ export const PartnerOpportunityBoard: React.FC = () => {
               <h2 className="text-sm font-bold text-slate-900 flex items-center gap-1.5">
                 <Briefcase className="w-4 h-4 text-indigo-600" />
                 <span>
-                  {isPartner ? 'Consented Candidate Expressions' : 'My Opportunity Applications'}
+                  {isPartner ? t('Consented Candidate Expressions') : t('My Opportunity Applications')}
                 </span>
               </h2>
               <span className="text-xs font-mono tabular-nums text-slate-500">
@@ -359,7 +361,7 @@ export const PartnerOpportunityBoard: React.FC = () => {
                         }}
                         className="w-full py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-xs font-semibold transition-colors cursor-pointer text-center"
                       >
-                        Invite to Interview Call
+                        {t('Invite to Interview Call')}
                       </button>
                     )}
                   </div>

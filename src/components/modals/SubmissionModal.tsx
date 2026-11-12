@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useYep } from '../../context/YepContext';
+import { useLanguage } from '../../context/LanguageContext';
 import { VirtualExchange } from '../../types/yep';
 import { X, WifiOff, UploadCloud, AlertCircle, CheckCircle2, Link2, FileText, Sparkles } from 'lucide-react';
 
@@ -11,6 +12,7 @@ interface SubmissionModalProps {
 
 export const SubmissionModal: React.FC<SubmissionModalProps> = ({ isOpen, onClose, exchange }) => {
   const { submitProject, simulatedOffline } = useYep();
+  const { t } = useLanguage();
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -64,7 +66,7 @@ export const SubmissionModal: React.FC<SubmissionModalProps> = ({ isOpen, onClos
         {/* Header */}
         <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/60">
           <div>
-            <h2 className="text-base font-bold text-slate-900">Submit Practical Capstone Project</h2>
+            <h2 className="text-base font-bold text-slate-900">{t('Submit Practical Capstone Project')}</h2>
             <p className="text-xs text-slate-500 mt-0.5">{exchange.title}</p>
           </div>
           <button
@@ -202,14 +204,14 @@ export const SubmissionModal: React.FC<SubmissionModalProps> = ({ isOpen, onClos
               onClick={onClose}
               className="px-4 py-2 text-xs font-medium text-slate-600 hover:text-slate-800 transition-colors cursor-pointer"
             >
-              Cancel
+              {t('Cancel')}
             </button>
             <button
               type="submit"
               className="px-5 py-2 text-xs font-semibold text-white bg-slate-900 rounded-lg hover:bg-slate-800 transition-colors cursor-pointer shadow-sm flex items-center gap-1.5"
             >
               <UploadCloud className="w-3.5 h-3.5" />
-              <span>{simulatedOffline ? 'Queue for Offline Sync' : 'Submit Project to Mentor Queue'}</span>
+              <span>{simulatedOffline ? t('Queue for Offline Sync') : t('Submit Project to Mentor Queue')}</span>
             </button>
           </div>
         </form>

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useYep } from '../../context/YepContext';
+import { useLanguage } from '../../context/LanguageContext';
 import { UserRole } from '../../types/yep';
 import { X, ShieldCheck, Check, AlertCircle } from 'lucide-react';
 
@@ -10,6 +11,7 @@ interface AuthModalProps {
 
 export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
   const { registerUser } = useYep();
+  const { t } = useLanguage();
 
   const [role, setRole] = useState<UserRole>('participant');
   const [name, setName] = useState('');
@@ -76,7 +78,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
         {/* Header */}
         <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
           <div>
-            <h2 className="text-lg font-bold text-slate-900 tracking-tight">Create YEP Account</h2>
+            <h2 className="text-lg font-bold text-slate-900 tracking-tight">{t('Create YEP Account')}</h2>
             <p className="text-xs text-slate-500 mt-0.5">
               Role-Based Access Control registration with age and regional validation
             </p>
@@ -148,7 +150,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
           {/* Full Name & Email */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-medium text-slate-700 mb-1">Full Name</label>
+              <label className="block text-xs font-medium text-slate-700 mb-1">{t('Full Name')}</label>
               <input
                 type="text"
                 required
@@ -159,7 +161,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-slate-700 mb-1">Email Address</label>
+              <label className="block text-xs font-medium text-slate-700 mb-1">{t('Email Address')}</label>
               <input
                 type="email"
                 required
@@ -173,7 +175,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
 
           {/* Password with Strength Validation */}
           <div>
-            <label className="block text-xs font-medium text-slate-700 mb-1">Password</label>
+            <label className="block text-xs font-medium text-slate-700 mb-1">{t('Password')}</label>
             <input
               type="password"
               required
@@ -223,7 +225,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
 
           {/* Regional Location */}
           <div>
-            <label className="block text-xs font-medium text-slate-700 mb-1">Regional Location</label>
+            <label className="block text-xs font-medium text-slate-700 mb-1">{t('Regional Location')}</label>
             <select
               value={region}
               onChange={e => setRegion(e.target.value)}
@@ -286,13 +288,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
               onClick={onClose}
               className="px-4 py-2 text-xs font-medium text-slate-600 hover:text-slate-800 transition-colors cursor-pointer"
             >
-              Cancel
+              {t('Cancel')}
             </button>
             <button
               type="submit"
               className="px-5 py-2 text-xs font-semibold text-white bg-slate-900 rounded-lg hover:bg-slate-800 transition-colors cursor-pointer shadow-sm"
             >
-              Register & Enter Platform
+              {t('Register & Enter Platform')}
             </button>
           </div>
         </form>

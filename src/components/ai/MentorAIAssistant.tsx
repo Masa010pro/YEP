@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useYep } from '../../context/YepContext';
+import { useLanguage } from '../../context/LanguageContext';
 import { UserAvatar } from '../common/UserAvatar';
 import { generateMentorFallback, MentorAIContext } from '../../utils/aiFallback';
 import {
@@ -34,6 +35,7 @@ export const MentorAIAssistant: React.FC = () => {
     enrollments,
     users
   } = useYep();
+  const { language, languageOption, t } = useLanguage();
 
   const [inputQuery, setInputQuery] = useState('');
   const [targetGroupSize, setTargetGroupSize] = useState<number>(3);
@@ -130,7 +132,9 @@ export const MentorAIAssistant: React.FC = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           message: prompt,
-          context: mentorContext
+          context: mentorContext,
+          language,
+          languageName: languageOption.name
         })
       });
 
@@ -144,7 +148,7 @@ export const MentorAIAssistant: React.FC = () => {
         type: mode,
         title,
         query: prompt,
-        response: data.reply || generateMentorFallback(prompt, mentorContext, targetGroupSize),
+        response: data.reply || generateMentorFallback(prompt, mentorContext, targetGroupSize, language),
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       };
 
@@ -153,9 +157,9 @@ export const MentorAIAssistant: React.FC = () => {
       const fallbackRecord: AIResponseRecord = {
         id: `rec-${Date.now()}`,
         type: mode,
-        title: `${title} (System-Grounded Engine)`,
+        title: `${title} (${languageOption.name})`,
         query: prompt,
-        response: generateMentorFallback(prompt, mentorContext, targetGroupSize),
+        response: generateMentorFallback(prompt, mentorContext, targetGroupSize, language),
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       };
       setAnalysisHistory(prev => [fallbackRecord, ...prev]);
@@ -175,14 +179,14 @@ export const MentorAIAssistant: React.FC = () => {
           <div>
             <div className="flex items-center gap-2">
               <h2 className="text-base font-bold text-slate-900">
-                Facilitator AI Diagnostic & Grouping Assistant
+                {t('Facilitator AI Diagnostic & Grouping Assistant')}
               </h2>
               <span className="text-[10px] font-semibold text-blue-800 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
-                Gemini 3.8 Flash
+                {languageOption.nativeName}
               </span>
             </div>
             <p className="text-xs text-slate-500 mt-0.5">
-              Evaluate participant skills, experience levels, and automatically form balanced project squads with pure natural language rationales
+              {t('Evaluate participant skills, experience levels, and automatically form balanced project squads with pure natural language rationales')}
             </p>
           </div>
         </div>
@@ -198,7 +202,7 @@ export const MentorAIAssistant: React.FC = () => {
             }`}
           >
             <Users className="w-3.5 h-3.5 text-blue-600" />
-            <span>Group Formation</span>
+            <span>{t('Group Formation')}</span>
           </button>
           <button
             onClick={() => setActiveTab('skills')}
@@ -209,7 +213,7 @@ export const MentorAIAssistant: React.FC = () => {
             }`}
           >
             <Layers className="w-3.5 h-3.5 text-emerald-600" />
-            <span>Skill Evaluation</span>
+            <span>{t('Skill Evaluation')}</span>
           </button>
           <button
             onClick={() => setActiveTab('chat')}
@@ -220,7 +224,7 @@ export const MentorAIAssistant: React.FC = () => {
             }`}
           >
             <Sparkles className="w-3.5 h-3.5 text-amber-600" />
-            <span>Custom Query</span>
+            <span>{t('Custom Query')}</span>
           </button>
         </div>
       </div>
@@ -231,7 +235,7 @@ export const MentorAIAssistant: React.FC = () => {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
               <div className="font-bold text-slate-900">
-                Automated Balanced Project Squad Formation
+                {t('Automated Balanced Project Squad Formation')}
               </div>
               <div className="text-slate-600 text-[11px] mt-0.5">
                 The AI analyzes the {cohortParticipants.length} participants in your cohorts, mixes skill tiers (Beginner, Intermediate, Advanced), and pairs complementary competencies.
@@ -240,15 +244,15 @@ export const MentorAIAssistant: React.FC = () => {
 
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-2">
-                <label className="text-[11px] font-medium text-slate-700">Squad Size:</label>
+                <label className="text-[11px] font-medium text-slate-700">{t('Squad Size:')}</label>
                 <select
                   value={targetGroupSize}
                   onChange={e => setTargetGroupSize(Number(e.target.value))}
                   className="px-2.5 py-1 bg-white border border-slate-300 rounded-lg text-xs font-semibold focus:outline-none focus:ring-1 focus:ring-blue-500"
                 >
-                  <option value={2}>Pairs (2 participants)</option>
-                  <option value={3}>Triads (3 participants)</option>
-                  <option value={4}>Squads (4 participants)</option>
+                  <option value={2}>{t('Pairs (2 participants)')}</option>
+                  <option value={3}>{t('Triads (3 participants)')}</option>
+                  <option value={4}>{t('Squads (4 participants)')}</option>
                 </select>
               </div>
 
@@ -262,7 +266,7 @@ export const MentorAIAssistant: React.FC = () => {
                 ) : (
                   <Sparkles className="w-3.5 h-3.5" />
                 )}
-                <span>Generate Balanced Project Groups</span>
+                <span>{t('Generate Balanced Project Groups')}</span>
               </button>
             </div>
           </div>
@@ -274,7 +278,7 @@ export const MentorAIAssistant: React.FC = () => {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
               <div className="font-bold text-slate-900">
-                Cohort Competency & Experience Diagnostic
+                {t('Cohort Competency & Experience Diagnostic')}
               </div>
               <div className="text-slate-600 text-[11px] mt-0.5">
                 Audit rubric scoring across Technical, Problem Solving, Impact, and Clarity to uncover collective learning bottlenecks.
@@ -291,7 +295,7 @@ export const MentorAIAssistant: React.FC = () => {
               ) : (
                 <Layers className="w-3.5 h-3.5" />
               )}
-              <span>Evaluate Skills & Competencies</span>
+              <span>{t('Evaluate Skills & Competencies')}</span>
             </button>
           </div>
         </div>
@@ -310,7 +314,7 @@ export const MentorAIAssistant: React.FC = () => {
               type="text"
               value={inputQuery}
               onChange={e => setInputQuery(e.target.value)}
-              placeholder="Ask anything about participant experience, who needs extra help, or recommended pairing strategies..."
+              placeholder={t('Ask anything about participant experience, who needs extra help, or recommended pairing strategies...')}
               className="flex-1 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white"
               disabled={isLoading}
             />
@@ -324,13 +328,13 @@ export const MentorAIAssistant: React.FC = () => {
               ) : (
                 <Send className="w-3.5 h-3.5 text-blue-400" />
               )}
-              <span>Analyze</span>
+              <span>{t('Analyze')}</span>
             </button>
           </div>
 
           {/* Quick chip prompts */}
           <div className="flex flex-wrap items-center gap-2 pt-1 text-[11px] text-slate-500">
-            <span>Try asking:</span>
+            <span>{t('Try asking:')}</span>
             <button
               type="button"
               onClick={() => handleRunAnalysis('custom', 'Which participants demonstrate the highest technical readiness for employer interviews?')}

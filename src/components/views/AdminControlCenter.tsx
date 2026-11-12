@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useYep } from '../../context/YepContext';
+import { useLanguage } from '../../context/LanguageContext';
 import { AuditActionType } from '../../types/yep';
 import { UserAvatar } from '../common/UserAvatar';
 import {
@@ -33,6 +34,7 @@ export const AdminControlCenter: React.FC = () => {
     moderateContent,
     exportImpactReport
   } = useYep();
+  const { t } = useLanguage();
 
   const [activeAdminTab, setActiveAdminTab] = useState<'overview' | 'moderation' | 'users' | 'audit' | 'reports'>('overview');
   const [auditFilterAction, setAuditFilterAction] = useState<string>('all');
@@ -98,7 +100,7 @@ export const AdminControlCenter: React.FC = () => {
                   {currentUser.name}
                 </h1>
                 <span className="text-xs font-semibold text-amber-900 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
-                  Programme Manager / Administrator
+                  {t('Programme Manager / Administrator')}
                 </span>
               </div>
               <p className="text-xs text-slate-600">
@@ -116,7 +118,7 @@ export const AdminControlCenter: React.FC = () => {
               className="px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-lg transition-colors cursor-pointer flex items-center gap-1.5 shadow-xs"
             >
               <Download className="w-3.5 h-3.5" />
-              <span>Export M&E CSV</span>
+              <span>{t('Export M&E CSV')}</span>
             </button>
           </div>
         </div>
@@ -171,7 +173,7 @@ export const AdminControlCenter: React.FC = () => {
               : 'text-slate-600 hover:text-slate-900 bg-slate-100'
           }`}
         >
-          Impact Overview
+          {t('Impact Overview')}
         </button>
 
         <button
@@ -182,7 +184,7 @@ export const AdminControlCenter: React.FC = () => {
               : 'text-slate-600 hover:text-slate-900 bg-slate-100'
           }`}
         >
-          <span>Moderation Queue</span>
+          <span>{t('Moderation Queue')}</span>
           {totalFlaggedCount > 0 && (
             <span className="bg-rose-500 text-white px-1.5 py-0.2 rounded-full text-[10px]">
               {totalFlaggedCount}
@@ -198,7 +200,7 @@ export const AdminControlCenter: React.FC = () => {
               : 'text-slate-600 hover:text-slate-900 bg-slate-100'
           }`}
         >
-          User Accounts & RBAC ({users.length})
+          {t('User Directory')} ({users.length})
         </button>
 
         <button
@@ -209,7 +211,7 @@ export const AdminControlCenter: React.FC = () => {
               : 'text-slate-600 hover:text-slate-900 bg-slate-100'
           }`}
         >
-          Immutable Audit Log ({auditLogs.length})
+          {t('Immutable Audit Log')} ({auditLogs.length})
         </button>
 
         <button
@@ -220,7 +222,7 @@ export const AdminControlCenter: React.FC = () => {
               : 'text-slate-600 hover:text-slate-900 bg-slate-100'
           }`}
         >
-          Zero-PII M&E Reports
+          {t('Zero-PII M&E Reports')}
         </button>
       </div>
 

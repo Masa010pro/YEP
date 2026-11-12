@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useYep } from '../../context/YepContext';
+import { useLanguage } from '../../context/LanguageContext';
 import { UserAvatar } from '../common/UserAvatar';
 import {
   GraduationCap,
@@ -20,6 +21,7 @@ interface LoginViewProps {
 
 export const LoginView: React.FC<LoginViewProps> = ({ onOpenRegisterModal }) => {
   const { login, loginAsDemoUser, users, setActiveTab } = useYep();
+  const { t } = useLanguage();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -30,13 +32,13 @@ export const LoginView: React.FC<LoginViewProps> = ({ onOpenRegisterModal }) => 
     setErrorMsg(null);
 
     if (!email.trim()) {
-      setErrorMsg('Please enter your email address.');
+      setErrorMsg(t('Please enter your email address.'));
       return;
     }
 
     const res = login(email, password);
     if (!res.success) {
-      setErrorMsg(res.error || 'Authentication failed. Please check credentials.');
+      setErrorMsg(res.error || t('Authentication failed. Please check credentials.'));
     }
   };
 
@@ -52,13 +54,13 @@ export const LoginView: React.FC<LoginViewProps> = ({ onOpenRegisterModal }) => 
         {/* Brand Header */}
         <div className="text-center space-y-2">
           <div className="text-xs font-semibold text-emerald-800 tracking-wide uppercase">
-            Youth Empowerment Project (YEP)
+            {t('Youth Empowerment Project (YEP)')}
           </div>
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
-            Sign In to the Empowerment Platform
+            {t('Sign In to the Empowerment Platform')}
           </h1>
           <p className="text-xs sm:text-sm text-slate-600 max-w-xl mx-auto">
-            Access capacity-governed virtual exchanges, standardized mentor rubrics, and consent-driven partner opportunity boards.
+            {t('Access capacity-governed virtual exchanges, standardized mentor rubrics, and consent-driven partner opportunity boards.')}
           </p>
         </div>
 
@@ -74,7 +76,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onOpenRegisterModal }) => 
           <form onSubmit={handleFormLogin} className="space-y-4 text-xs">
             <div>
               <label className="block font-medium text-slate-700 mb-1">
-                Email Address
+                {t('Email Address')}
               </label>
               <div className="relative">
                 <Mail className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -91,8 +93,8 @@ export const LoginView: React.FC<LoginViewProps> = ({ onOpenRegisterModal }) => 
 
             <div>
               <div className="flex items-center justify-between mb-1">
-                <label className="block font-medium text-slate-700">Password</label>
-                <span className="text-[11px] text-slate-400">Any password for demo</span>
+                <label className="block font-medium text-slate-700">{t('Password')}</label>
+                <span className="text-[11px] text-slate-400">{t('Any password for demo')}</span>
               </div>
               <div className="relative">
                 <Lock className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
@@ -110,7 +112,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onOpenRegisterModal }) => 
               type="submit"
               className="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white rounded-lg font-semibold text-xs transition-colors cursor-pointer shadow-sm flex items-center justify-center gap-1.5"
             >
-              <span>Sign In to Account</span>
+              <span>{t('Sign In to Account')}</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </button>
           </form>
@@ -120,13 +122,13 @@ export const LoginView: React.FC<LoginViewProps> = ({ onOpenRegisterModal }) => 
               onClick={onOpenRegisterModal}
               className="text-emerald-700 font-semibold hover:underline cursor-pointer"
             >
-              Create Account (Aged 18–35)
+              {t('Create Account (Aged 18–35)')}
             </button>
             <button
               onClick={() => setActiveTab('landing')}
               className="hover:text-slate-800 transition-colors cursor-pointer"
             >
-              View Public Overview
+              {t('View Public Overview')}
             </button>
           </div>
         </div>
@@ -136,10 +138,10 @@ export const LoginView: React.FC<LoginViewProps> = ({ onOpenRegisterModal }) => 
           <div className="text-center space-y-1">
             <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-800 uppercase tracking-wide">
               <Sparkles className="w-3.5 h-3.5 text-amber-600" />
-              <span>1-Click Test Accounts (Initials Badge)</span>
+              <span>{t('1-Click Test Accounts (Initials Badge)')}</span>
             </div>
             <p className="text-xs text-slate-500">
-              Select any role below to automatically sign in and immediately access that actor's dedicated dashboard:
+              {t("Select any role below to automatically sign in and immediately access that actor's dedicated dashboard:")}
             </p>
           </div>
 
@@ -154,7 +156,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onOpenRegisterModal }) => 
                   <div className="flex items-center justify-between">
                     <UserAvatar name={participantDemo.name} role="participant" size="sm" />
                     <span className="text-[10px] font-semibold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-                      Age 18–35
+                      {t('Age 18–35')}
                     </span>
                   </div>
                   <div>
@@ -166,14 +168,14 @@ export const LoginView: React.FC<LoginViewProps> = ({ onOpenRegisterModal }) => 
                     </div>
                   </div>
                   <p className="text-[11px] text-slate-600 leading-snug">
-                    Participant · Enrolls in cohorts, submits practical capstone projects, and manages portfolio consent.
+                    {t('Participant · Enrolls in cohorts, submits practical capstone projects, and manages portfolio consent.')}
                   </p>
                 </div>
                 <button
                   type="button"
                   className="w-full py-1.5 bg-slate-100 group-hover:bg-emerald-600 group-hover:text-white text-slate-700 font-semibold rounded-lg transition-colors text-xs text-center"
                 >
-                  Sign In as Participant →
+                  {t('Sign In as Participant →')}
                 </button>
               </div>
             )}
@@ -188,7 +190,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onOpenRegisterModal }) => 
                   <div className="flex items-center justify-between">
                     <UserAvatar name={mentorDemo.name} role="mentor" size="sm" />
                     <span className="text-[10px] font-semibold text-blue-800 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
-                      Facilitator
+                      {t('Facilitator')}
                     </span>
                   </div>
                   <div>
@@ -200,14 +202,14 @@ export const LoginView: React.FC<LoginViewProps> = ({ onOpenRegisterModal }) => 
                     </div>
                   </div>
                   <p className="text-[11px] text-slate-600 leading-snug">
-                    Mentor · Schedules live cohort sessions, reviews submissions, and scores 1–5 rubrics.
+                    {t('Mentor · Schedules live cohort sessions, reviews submissions, and scores 1–5 rubrics.')}
                   </p>
                 </div>
                 <button
                   type="button"
                   className="w-full py-1.5 bg-slate-100 group-hover:bg-blue-600 group-hover:text-white text-slate-700 font-semibold rounded-lg transition-colors text-xs text-center"
                 >
-                  Sign In as Mentor →
+                  {t('Sign In as Mentor →')}
                 </button>
               </div>
             )}
@@ -222,7 +224,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onOpenRegisterModal }) => 
                   <div className="flex items-center justify-between">
                     <UserAvatar name={partnerDemo.name} role="partner" size="sm" />
                     <span className="text-[10px] font-semibold text-indigo-800 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200">
-                      Employer
+                      {t('Employer')}
                     </span>
                   </div>
                   <div>
@@ -234,14 +236,14 @@ export const LoginView: React.FC<LoginViewProps> = ({ onOpenRegisterModal }) => 
                     </div>
                   </div>
                   <p className="text-[11px] text-slate-600 leading-snug">
-                    Partner · Publishes digital openings and reviews candidate expressions with explicit consent.
+                    {t('Partner · Publishes digital openings and reviews candidate expressions with explicit consent.')}
                   </p>
                 </div>
                 <button
                   type="button"
                   className="w-full py-1.5 bg-slate-100 group-hover:bg-indigo-600 group-hover:text-white text-slate-700 font-semibold rounded-lg transition-colors text-xs text-center"
                 >
-                  Sign In as Partner →
+                  {t('Sign In as Partner →')}
                 </button>
               </div>
             )}
@@ -256,7 +258,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onOpenRegisterModal }) => 
                   <div className="flex items-center justify-between">
                     <UserAvatar name={adminDemo.name} role="admin" size="sm" />
                     <span className="text-[10px] font-semibold text-amber-800 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
-                      Admin
+                      {t('Admin')}
                     </span>
                   </div>
                   <div>
@@ -268,14 +270,14 @@ export const LoginView: React.FC<LoginViewProps> = ({ onOpenRegisterModal }) => 
                     </div>
                   </div>
                   <p className="text-[11px] text-slate-600 leading-snug">
-                    Administrator · Oversees immutable audit logs, moderates flagged content, and exports zero-PII M&E.
+                    {t('Administrator · Oversees immutable audit logs, moderates flagged content, and exports zero-PII M&E.')}
                   </p>
                 </div>
                 <button
                   type="button"
                   className="w-full py-1.5 bg-slate-100 group-hover:bg-amber-600 group-hover:text-white text-slate-700 font-semibold rounded-lg transition-colors text-xs text-center"
                 >
-                  Sign In as Admin →
+                  {t('Sign In as Admin →')}
                 </button>
               </div>
             )}

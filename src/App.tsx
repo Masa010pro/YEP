@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { YepProvider, useYep } from './context/YepContext';
+import { LanguageProvider } from './context/LanguageContext';
 import { Header } from './components/layout/Header';
 import { LoginView } from './components/views/LoginView';
 import { LandingView } from './components/views/LandingView';
@@ -114,8 +115,10 @@ const MainContent: React.FC = () => {
 
 export default function App() {
   return (
-    <YepProvider>
-      <MainContent />
-    </YepProvider>
+    <LanguageProvider>
+      <YepProvider>
+        <MainContent />
+      </YepProvider>
+    </LanguageProvider>
   );
 }

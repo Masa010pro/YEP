@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useYep } from '../../context/YepContext';
+import { useLanguage } from '../../context/LanguageContext';
 import { ProjectSubmission, RubricScores, VirtualSession } from '../../types/yep';
 import { UserAvatar } from '../common/UserAvatar';
 import { MentorAIAssistant } from '../ai/MentorAIAssistant';
@@ -33,6 +34,7 @@ export const MentorWorkspace: React.FC = () => {
     gradeSubmission,
     addSessionToExchange
   } = useYep();
+  const { t } = useLanguage();
 
   // Active rubric evaluation modal state
   const [evaluatingSub, setEvaluatingSub] = useState<ProjectSubmission | null>(null);
@@ -186,14 +188,14 @@ export const MentorWorkspace: React.FC = () => {
                   {currentUser.name}
                 </h1>
                 <span className="text-xs font-semibold text-blue-800 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
-                  Mentor / Facilitator
+                  {t('Mentor / Facilitator')}
                 </span>
               </div>
               <p className="text-xs text-slate-600">
                 {currentUser.titleOrOrg} · {currentUser.region}
               </p>
               <p className="text-xs text-slate-500 max-w-xl leading-relaxed">
-                Overseeing participant cohorts, synchronous virtual coaching, and assessing capstones against standardized 1–5 rubrics.
+                {t('Overseeing participant cohorts, synchronous virtual coaching, and assessing capstones against standardized 1–5 rubrics.')}
               </p>
             </div>
           </div>
@@ -204,7 +206,7 @@ export const MentorWorkspace: React.FC = () => {
               className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-lg transition-colors cursor-pointer flex items-center gap-1.5 shadow-xs"
             >
               <Plus className="w-3.5 h-3.5" />
-              <span>Schedule Virtual Session</span>
+              <span>{t('Schedule Virtual Session')}</span>
             </button>
           </div>
         </div>
@@ -212,32 +214,32 @@ export const MentorWorkspace: React.FC = () => {
         {/* Tabular KPI Strip */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-6 mt-6 border-t border-slate-100 text-xs">
           <div>
-            <div className="text-slate-500">Assigned Exchanges</div>
+            <div className="text-slate-500">{t('Assigned Exchanges')}</div>
             <div className="text-2xl font-bold text-slate-900 font-mono tabular-nums mt-0.5">
               {assignedExchanges.length}
             </div>
-            <div className="text-[11px] text-slate-400">Active cohorts</div>
+            <div className="text-[11px] text-slate-400">{t('Active cohorts')}</div>
           </div>
           <div>
-            <div className="text-slate-500">Enrolled Participants</div>
+            <div className="text-slate-500">{t('Enrolled Participants')}</div>
             <div className="text-2xl font-bold text-slate-900 font-mono tabular-nums mt-0.5">
               {assignedExchanges.reduce((acc, e) => acc + e.enrolledCount, 0)}
             </div>
-            <div className="text-[11px] text-slate-400">Across your cohorts</div>
+            <div className="text-[11px] text-slate-400">{t('Across your cohorts')}</div>
           </div>
           <div>
-            <div className="text-slate-500">Pending Review Queue</div>
+            <div className="text-slate-500">{t('Pending Review Queue')}</div>
             <div className="text-2xl font-bold text-amber-700 font-mono tabular-nums mt-0.5">
               {pendingQueue.length}
             </div>
-            <div className="text-[11px] text-slate-400">Awaiting 1–5 rubric evaluation</div>
+            <div className="text-[11px] text-slate-400">{t('Awaiting 1–5 rubric evaluation')}</div>
           </div>
           <div>
-            <div className="text-slate-500">Completed Evaluations</div>
+            <div className="text-slate-500">{t('Completed Evaluations')}</div>
             <div className="text-2xl font-bold text-emerald-700 font-mono tabular-nums mt-0.5">
               {gradedQueue.length}
             </div>
-            <div className="text-[11px] text-slate-400">Graded capstones</div>
+            <div className="text-[11px] text-slate-400">{t('Graded capstones')}</div>
           </div>
         </div>
       </div>
@@ -249,11 +251,11 @@ export const MentorWorkspace: React.FC = () => {
             <div className="flex items-center gap-2">
               <BarChart3 className="w-4 h-4 text-emerald-600" />
               <h2 className="text-base font-bold text-slate-900">
-                Participant Level & Competency Analytics
+                {t('Participant Level & Competency Analytics')}
               </h2>
             </div>
             <p className="text-xs text-slate-500 mt-0.5">
-              Real-time competency progression, skill tier distribution, and rubric mastery across your facilitated cohorts
+              {t('Real-time competency progression, skill tier distribution, and rubric mastery across your facilitated cohorts')}
             </p>
           </div>
 
@@ -269,7 +271,7 @@ export const MentorWorkspace: React.FC = () => {
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
-                {lvl}
+                {t(lvl)}
               </button>
             ))}
           </div>
@@ -283,14 +285,14 @@ export const MentorWorkspace: React.FC = () => {
               <div>
                 <div className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
                   <Layers className="w-3.5 h-3.5 text-blue-600" />
-                  <span>Participant Skill Tier Distribution</span>
+                  <span>{t('Participant Skill Tier Distribution')}</span>
                 </div>
                 <div className="text-[11px] text-slate-500 mt-0.5">
-                  Proportion of youth classified by verified capability & capstone mastery
+                  {t('Proportion of youth classified by verified capability & capstone mastery')}
                 </div>
               </div>
               <span className="text-xs font-mono font-semibold text-slate-700 bg-white px-2 py-0.5 rounded border border-slate-200">
-                {participantLevels.length} Total Monitored
+                {participantLevels.length} {t('Total Monitored')}
               </span>
             </div>
 
@@ -321,12 +323,12 @@ export const MentorWorkspace: React.FC = () => {
                   <div className="flex items-center justify-between">
                     <span className="flex items-center gap-1.5 font-medium text-slate-700">
                       <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block" />
-                      Beginner
+                      {t('Beginner')}
                     </span>
                     <span className="font-mono font-bold text-slate-900">{beginnerPct}%</span>
                   </div>
                   <div className="text-[11px] text-slate-500 font-mono">
-                    {beginnerList.length} participants
+                    {beginnerList.length} {t('participants')}
                   </div>
                   <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
                     <div className="bg-emerald-500 h-full rounded-full" style={{ width: `${beginnerPct}%` }} />
@@ -338,12 +340,12 @@ export const MentorWorkspace: React.FC = () => {
                   <div className="flex items-center justify-between">
                     <span className="flex items-center gap-1.5 font-medium text-slate-700">
                       <span className="w-2.5 h-2.5 rounded-full bg-blue-500 inline-block" />
-                      Intermediate
+                      {t('Intermediate')}
                     </span>
                     <span className="font-mono font-bold text-slate-900">{intermediatePct}%</span>
                   </div>
                   <div className="text-[11px] text-slate-500 font-mono">
-                    {intermediateList.length} participants
+                    {intermediateList.length} {t('participants')}
                   </div>
                   <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
                     <div className="bg-blue-500 h-full rounded-full" style={{ width: `${intermediatePct}%` }} />
@@ -355,12 +357,12 @@ export const MentorWorkspace: React.FC = () => {
                   <div className="flex items-center justify-between">
                     <span className="flex items-center gap-1.5 font-medium text-slate-700">
                       <span className="w-2.5 h-2.5 rounded-full bg-purple-500 inline-block" />
-                      Advanced
+                      {t('Advanced')}
                     </span>
                     <span className="font-mono font-bold text-slate-900">{advancedPct}%</span>
                   </div>
                   <div className="text-[11px] text-slate-500 font-mono">
-                    {advancedList.length} participants
+                    {advancedList.length} {t('participants')}
                   </div>
                   <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
                     <div className="bg-purple-500 h-full rounded-full" style={{ width: `${advancedPct}%` }} />
@@ -372,11 +374,11 @@ export const MentorWorkspace: React.FC = () => {
             {/* Level Progression Funnel Pipeline */}
             <div className="pt-2 border-t border-slate-200/80 space-y-2">
               <div className="text-[11px] font-semibold text-slate-700 uppercase tracking-wide">
-                Cohort Progression Funnel
+                {t('Cohort Progression Funnel')}
               </div>
               <div className="space-y-1.5 text-[11px]">
                 <div className="flex items-center justify-between text-slate-600">
-                  <span>Enrolled & Initial Onboarding</span>
+                  <span>{t('Enrolled & Initial Onboarding')}</span>
                   <span className="font-mono font-semibold">100% ({assignedCohortEnrollments.length})</span>
                 </div>
                 <div className="w-full bg-slate-200 rounded-full h-2 overflow-hidden">
@@ -384,7 +386,7 @@ export const MentorWorkspace: React.FC = () => {
                 </div>
 
                 <div className="flex items-center justify-between text-slate-600 pt-1">
-                  <span>Virtual Lab Attendance & Participation</span>
+                  <span>{t('Virtual Lab Attendance & Participation')}</span>
                   <span className="font-mono font-semibold">86% ({Math.round(assignedCohortEnrollments.length * 0.86)})</span>
                 </div>
                 <div className="w-full bg-slate-200 rounded-full h-2 overflow-hidden">
@@ -392,7 +394,7 @@ export const MentorWorkspace: React.FC = () => {
                 </div>
 
                 <div className="flex items-center justify-between text-slate-600 pt-1">
-                  <span>Capstone Submissions Completed</span>
+                  <span>{t('Capstone Submissions Completed')}</span>
                   <span className="font-mono font-semibold">
                     {Math.round((gradedQueue.length / totalCohortCount) * 100)}% ({gradedQueue.length})
                   </span>
@@ -413,10 +415,10 @@ export const MentorWorkspace: React.FC = () => {
               <div>
                 <div className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
                   <Target className="w-3.5 h-3.5 text-emerald-600" />
-                  <span>Rubric Competency Mastery (1–5 Scale)</span>
+                  <span>{t('Rubric Competency Mastery (1–5 Scale)')}</span>
                 </div>
                 <div className="text-[11px] text-slate-500 mt-0.5">
-                  Cohort aggregate score per standardized mentorship dimension
+                  {t('Cohort aggregate score per standardized mentorship dimension')}
                 </div>
               </div>
               <span className="text-[11px] font-semibold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
@@ -571,7 +573,7 @@ export const MentorWorkspace: React.FC = () => {
                           : 'bg-emerald-50 text-emerald-800 border-emerald-200'
                       }`}
                     >
-                      {p.level}
+                      {t(p.level)}
                     </span>
                     <div className="text-[10px] font-mono text-slate-500 mt-0.5">
                       {p.score ? `${p.score} / 5.0` : `${p.progress}% done`}
@@ -593,14 +595,14 @@ export const MentorWorkspace: React.FC = () => {
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div>
                 <h2 className="text-base font-bold text-slate-900">
-                  Unified Project Review Queue
+                  {t('Unified Project Review Queue')}
                 </h2>
                 <p className="text-xs text-slate-500 mt-0.5">
-                  Submissions requiring standardized rubric evaluation and qualitative mentorship
+                  {t('Submissions requiring standardized rubric evaluation and qualitative mentorship')}
                 </p>
               </div>
               <span className="text-xs font-mono tabular-nums text-slate-500">
-                {pendingQueue.length} Pending
+                {pendingQueue.length} {t('Pending')}
               </span>
             </div>
 
@@ -633,7 +635,7 @@ export const MentorWorkspace: React.FC = () => {
                         className="px-3.5 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer shrink-0 shadow-xs"
                       >
                         <Sliders className="w-3.5 h-3.5" />
-                        <span>Evaluate Rubric</span>
+                        <span>{t('Evaluate Rubric')}</span>
                       </button>
                     </div>
 
@@ -642,7 +644,7 @@ export const MentorWorkspace: React.FC = () => {
                     </p>
 
                     <div className="text-xs text-slate-600 bg-slate-50 p-2.5 rounded border border-slate-200/70">
-                      <strong className="text-slate-800">Key Takeaways:</strong> {sub.keyTakeaways}
+                      <strong className="text-slate-800">{t('Key Takeaways:')}</strong> {sub.keyTakeaways}
                     </div>
 
                     {/* Artifact links */}
@@ -655,7 +657,7 @@ export const MentorWorkspace: React.FC = () => {
                           className="text-emerald-700 hover:text-emerald-800 font-medium flex items-center gap-1"
                         >
                           <ExternalLink className="w-3 h-3" />
-                          <span>Code Repository</span>
+                          <span>{t('Code Repository')}</span>
                         </a>
                       )}
                       {sub.demoOrArtifactLink && (
@@ -666,7 +668,7 @@ export const MentorWorkspace: React.FC = () => {
                           className="text-emerald-700 hover:text-emerald-800 font-medium flex items-center gap-1"
                         >
                           <ExternalLink className="w-3 h-3" />
-                          <span>Live Artifact Demo</span>
+                          <span>{t('Live Artifact Demo')}</span>
                         </a>
                       )}
                     </div>
@@ -676,7 +678,7 @@ export const MentorWorkspace: React.FC = () => {
             ) : (
               <div className="p-8 text-center text-xs text-slate-500 bg-slate-50 rounded-lg">
                 <CheckCircle className="w-6 h-6 text-emerald-600 mx-auto mb-2" />
-                <p>All submitted capstone projects have been evaluated. Your review queue is clear!</p>
+                <p>{t('All submitted capstone projects have been evaluated. Your review queue is clear!')}</p>
               </div>
             )}
           </div>
@@ -684,7 +686,7 @@ export const MentorWorkspace: React.FC = () => {
           {/* Graded Submissions Archive */}
           <div className="bg-white rounded-xl border border-slate-200 p-6 space-y-4">
             <h2 className="text-base font-bold text-slate-900">
-              Evaluated Submissions History ({gradedQueue.length})
+              {t('Evaluated Submissions History')} ({gradedQueue.length})
             </h2>
             <div className="space-y-3">
               {gradedQueue.map(sub => (
@@ -707,7 +709,7 @@ export const MentorWorkspace: React.FC = () => {
                       onClick={() => openRubricModal(sub)}
                       className="text-xs text-slate-600 hover:text-slate-900 underline font-medium cursor-pointer"
                     >
-                      Edit Grade
+                      {t('Edit Grade')}
                     </button>
                   </div>
                 </div>
@@ -723,7 +725,7 @@ export const MentorWorkspace: React.FC = () => {
             <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
               <h2 className="text-sm font-bold text-slate-900 flex items-center gap-1.5">
                 <Calendar className="w-4 h-4 text-blue-600" />
-                <span>Facilitated Cohort Sessions</span>
+                <span>{t('Facilitated Cohort Sessions')}</span>
               </h2>
             </div>
 
@@ -751,7 +753,7 @@ export const MentorWorkspace: React.FC = () => {
                       className="w-full py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs font-medium flex items-center justify-center gap-1 transition-colors"
                     >
                       <Video className="w-3 h-3" />
-                      <span>Start Virtual Room</span>
+                      <span>{t('Start Virtual Room')}</span>
                     </a>
                   </div>
                 ))
@@ -763,7 +765,7 @@ export const MentorWorkspace: React.FC = () => {
           <div className="bg-white rounded-xl border border-slate-200 p-5 space-y-3 text-xs">
             <h2 className="text-sm font-bold text-slate-900 flex items-center gap-1.5">
               <Users className="w-4 h-4 text-slate-600" />
-              <span>Assigned Cohort Roster</span>
+              <span>{t('Assigned Cohort Roster')}</span>
             </h2>
             <div className="space-y-2">
               {assignedCohortEnrollments.map(enr => {
@@ -998,14 +1000,14 @@ export const MentorWorkspace: React.FC = () => {
                   onClick={() => setEvaluatingSub(null)}
                   className="px-4 py-2 text-xs font-medium text-slate-600 hover:text-slate-800 transition-colors cursor-pointer"
                 >
-                  Cancel
+                  {t('Cancel')}
                 </button>
                 <button
                   type="submit"
                   className="px-5 py-2 text-xs font-semibold text-white bg-slate-900 hover:bg-slate-800 rounded-lg transition-colors cursor-pointer shadow-sm flex items-center gap-1.5"
                 >
                   <Send className="w-3.5 h-3.5" />
-                  <span>Publish Graded Evaluation</span>
+                  <span>{t('Publish Graded Evaluation')}</span>
                 </button>
               </div>
             </form>

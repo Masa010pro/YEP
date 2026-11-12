@@ -1,5 +1,6 @@
 import React from 'react';
 import { useYep } from '../../context/YepContext';
+import { useLanguage } from '../../context/LanguageContext';
 import { VirtualExchange } from '../../types/yep';
 import {
   ArrowRight,
@@ -26,6 +27,7 @@ export const LandingView: React.FC<LandingViewProps> = ({
   onOpenOfflinePack
 }) => {
   const { exchanges, setActiveTab, isLowBandwidthMode } = useYep();
+  const { t } = useLanguage();
   const featuredExchanges = exchanges.slice(0, 3);
 
   return (
@@ -70,7 +72,7 @@ export const LandingView: React.FC<LandingViewProps> = ({
                   onClick={() => setActiveTab('exchanges')}
                   className="px-5 py-3 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs sm:text-sm font-semibold transition-all cursor-pointer shadow-sm flex items-center gap-2"
                 >
-                  <span>Explore Exchange Catalogue</span>
+                  <span>{t('Explore Exchange Catalogue')}</span>
                   <ArrowRight className="w-4 h-4" />
                 </button>
 
@@ -78,7 +80,7 @@ export const LandingView: React.FC<LandingViewProps> = ({
                   onClick={onOpenRegisterModal}
                   className="px-5 py-3 bg-white hover:bg-slate-50 text-slate-800 border border-slate-300 rounded-lg text-xs sm:text-sm font-semibold transition-colors cursor-pointer"
                 >
-                  Register Profile (18–35)
+                  {t('Register Profile (18–35)')}
                 </button>
               </div>
             </div>
@@ -296,13 +298,13 @@ export const LandingView: React.FC<LandingViewProps> = ({
                 onClick={onOpenRegisterModal}
                 className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold transition-colors cursor-pointer"
               >
-                Create Account (Age 18–35)
+                {t('Create Account (Age 18–35)')}
               </button>
               <button
                 onClick={() => setActiveTab('opportunities')}
                 className="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-lg text-xs font-semibold transition-colors cursor-pointer"
               >
-                View Partner Openings
+                {t('View Partner Openings')}
               </button>
             </div>
           </div>

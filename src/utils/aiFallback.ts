@@ -1,3 +1,5 @@
+import { LanguageCode } from '../i18n/translations';
+
 export interface ParticipantAIContext {
   currentUser: {
     id: string;
@@ -97,10 +99,108 @@ export interface MentorAIContext {
   evaluatedSubmissionsCount: number;
 }
 
+const AI_LOCALE_TEXT: Record<
+  LanguageCode,
+  {
+    hello: string;
+    advisorIntro: string;
+    oppHeader: string;
+    exchangeHeader: string;
+    rubricHeader: string;
+    consentHeader: string;
+    consentReminder: string;
+    squadHeader: string;
+    evalHeader: string;
+    readinessHeader: string;
+    footerTip: string;
+  }
+> = {
+  en: {
+    hello: 'Hello',
+    advisorIntro: 'I am your YEP Opportunity & Project Advisor, connected directly to the live platform data.',
+    oppHeader: 'Here is how your declared skills and career goals match the active openings on the Partner Opportunity Board:',
+    exchangeHeader: 'Here is a breakdown of the virtual learning exchanges currently in the YEP catalogue relative to your profile:',
+    rubricHeader: 'Practical capstone submissions in YEP are evaluated by your assigned mentor using a standardized 1 to 5 rubric with equal 25% weight across four pillars:',
+    consentHeader: 'YEP follows strict consent-driven portfolio sharing rules:',
+    consentReminder: 'Consent Status Reminder:',
+    squadHeader: 'Balanced project squad arrangement based on participant skills, levels, and progress:',
+    evalHeader: 'Cohort Skills, Level & Competency Diagnostic',
+    readinessHeader: 'Targeted readiness assessment across your cohort participants:',
+    footerTip: 'Tip: You can change the Squad Size dropdown and regenerate anytime.'
+  },
+  sw: {
+    hello: 'Habari',
+    advisorIntro: 'Mimi ni Mshauri wako wa AI wa Miradi na Fursa katika Mradi wa Kuwawezesha Vijana (YEP), nikiwa nimeunganishwa moja kwa moja na data za mfumo.',
+    oppHeader: 'Hivi ndivyo ujuzi wako na malengo yako ya kikazi yanavyolingana na fursa zinazopatikana kwenye Bodi ya Washirika:',
+    exchangeHeader: 'Haya ni mafunzo ya mtandaoni yaliyopo kwenye orodha ya YEP kulingana na wasifu wako:',
+    rubricHeader: 'Miradi ya vitendo katika YEP inatathminiwa na mlezi wako kwa kutumia kipimo sanifu cha 1 hadi 5 chenye uzito sawa wa 25% katika nguzo nne:',
+    consentHeader: 'YEP inafuata sheria madhubuti za ridhaa ya kushiriki taarifa za wasifu:',
+    consentReminder: 'Ukumbusho wa Hali ya Ridhaa:',
+    squadHeader: 'Mpangilio sawia wa makundi ya miradi kulingana na ujuzi, viwango, na maendeleo ya washiriki:',
+    evalHeader: 'Ripoti ya Uchunguzi wa Ujuzi, Viwango na Uwezo wa Kundi',
+    readinessHeader: 'Tathmini ya utayari wa washiriki katika kundi lako:',
+    footerTip: 'Kidokezo: Unaweza kubadilisha ukubwa wa kundi na kuunda upya wakati wowote.'
+  },
+  lg: {
+    hello: 'Gyebale ko',
+    advisorIntro: 'Nze Muyambi wo owa AI ku Pulojekiti n’Emirimu mu YEP, ng’akolagana butereevu n’ebiwandiiko by’enkola eno.',
+    oppHeader: 'Bino bye bikwata ku ngeri obukugu bwo gye bukwataganamu n’emirimu egiri ku lukalala lw’Abakolagana:',
+    exchangeHeader: 'Gano ge masomo ag’oku mutimbagano agali mu lukalala lwa YEP okusinziira ku bikukwatako:',
+    rubricHeader: 'Pulojekiti mu YEP zikeberebwa abayambi nga bakozesa ekipimo kya 1 okutuuka ku 5 mu bitundu bina ebyenkana (25% buli kimu):',
+    consentHeader: 'YEP egoberera amateeka makakafu ag’okugabana ebiwandiiko nga ggwe osoose okukkiriza:',
+    consentReminder: 'Okujjukira ku Lukusa Lwo:',
+    squadHeader: 'Okugabanya ebibinja bya pulojekiti ebyenkana okusinziira ku bukugu n’emitendera gy’abayizi:',
+    evalHeader: 'Okukebera Obukugu n’Emitendera gy’Ekibinja',
+    readinessHeader: 'Okukebera obwetegefu bw’abayizi mu kibinja kyo:',
+    footerTip: 'Magezi: Osobola okukyusa omuwendo mu kibinja n’oddamu okubikola ekiseera kyonna.'
+  },
+  nyn: {
+    hello: 'Agandi',
+    advisorIntro: 'Niinye Omuhabuzi waawe wa AI aha Purojekiti n’Emirimo omu YEP, orikukoragana butunu n’ebihandiiko by’omukutu.',
+    oppHeader: 'Oku nikwo obushoborozi bwawe burikukwatanisa n’emirimo eri aha rutonde rw’Abakwatanisa:',
+    exchangeHeader: 'Egi niyo mishomo y’omutimbagano eri omu rutonde rwa YEP okurugiirira aha kihandiiko kyawe:',
+    rubricHeader: 'Purojekiti omu YEP nizishwijumwa abeegyesa aha kipimo kya 1 kuhika 5 omu bicweeka bina ebirikwingana (25% buri kimwe):',
+    consentHeader: 'YEP neekuratira ebiragiro bikuru by’okubagana ebihandiiko ahabw’orukusa rwawe:',
+    consentReminder: 'Okwijuka aha Rukusa Rwawe:',
+    squadHeader: 'Okukora ebibinja bya purojekiti ebiringaniire okurugiirira aha bushoborozi n’emitendera y’abeegi:',
+    evalHeader: 'Okushwijuma Obushoborozi n’Emitendera y’Ekibinja',
+    readinessHeader: 'Okushwijuma okwetebeekanisa kw’abeegi omu kibinja kyawe:',
+    footerTip: 'Obuhabuzi: Noobaasa kuhindura omuwendo gw’abantu omu kibinja obwire bwona.'
+  },
+  rw: {
+    hello: 'Muraho',
+    advisorIntro: 'Ndi Umujyanama wawe wa AI ku Mishinga n’Amahirwe muri YEP, uhuye byimazeyo n’amakuru ari muri sisitemu.',
+    oppHeader: 'Uku ni ko ubumenyi bwawe n’intego zawe bihura n’imyanya y’akazi iri ku kibaho cy’Abafatanyabikorwa:',
+    exchangeHeader: 'Dore amasomo yo kuri murandasi ari mu rutonde rwa YEP ajyanye n’umwirondoro wawe:',
+    rubricHeader: 'Imishinga y’ingiro muri YEP isuzumwa n’abafasha hakoreshejwe igipimo cya 1 kugeza kuri 5 mu byiciro bine bingana (25% kuri buri cyiciro):',
+    consentHeader: 'YEP ikurikiza amategeko akomeye yo gusangiza amakuru gusa igihe utanze uburenganzira:',
+    consentReminder: 'Icyibutso ku Burenganzira:',
+    squadHeader: 'Igenamigambi ry’amatsinda y’imishinga yuzuzanya hakurikijwe ubumenyi n’urwego rw’abanyeshuri:',
+    evalHeader: 'Isuzuma ry’Ubumenyi, Inzego n’Ubushobozi bw’Itsinda',
+    readinessHeader: 'Isuzuma ry’uko abanyeshuri bo mu itsinda ryawe biteguye:',
+    footerTip: 'Inama: Ushobora guhindura umubare w’abagize itsinda ukongera ugasaba andi matsinda igihe icyo ari cyo cyose.'
+  },
+  ach: {
+    hello: 'Kop ango',
+    advisorIntro: 'An aye Lami Tam me AI i kom Tic ki Purujek i YEP, ma atiyo atir ki ngec ma tye i kacocona.',
+    oppHeader: 'Kit man aye dirowa ni ki yub ni romo kwede ki tic ma tye i Kabedo pa Lwak:',
+    exchangeHeader: 'Magu aye pwony me wiya ma tye i nying pwony me YEP malube ki ngec i komi:',
+    rubricHeader: 'Tic me purujek i YEP ki ngio gi bot lapwony ki pim me 1 nio 5 i kabedo angwen ma romo (25% acel acel):',
+    consentHeader: 'YEP lubo cik matek me poko ngec ka in aye imiyo yee:',
+    consentReminder: 'Poyo Wii i kom Yee:',
+    squadHeader: 'Yubo dul ma romo maber malube ki dirowa, rwom, ki wot pa lutino kwan:',
+    evalHeader: 'Ngio Dirowa, Rwom ki Kero pa Dul',
+    readinessHeader: 'Ngio kit ma lutino kwan i dul megi gi yubbe kwede:',
+    footerTip: 'Tam: Iromo roco wel dano i dul ci icak yubo dul manyen cawa mo keken.'
+  }
+};
+
 export function generateParticipantFallback(
   message: string,
-  context: ParticipantAIContext
+  context: ParticipantAIContext,
+  language: LanguageCode = 'en'
 ): string {
+  const loc = AI_LOCALE_TEXT[language] || AI_LOCALE_TEXT.en;
   const q = message.toLowerCase();
   const user = context.currentUser;
   const opportunities = context.opportunities.filter(o => o.status === 'published');
@@ -116,7 +216,11 @@ export function generateParticipantFallback(
     q.includes('hire') ||
     q.includes('match') ||
     q.includes('work') ||
-    q.includes('career')
+    q.includes('career') ||
+    q.includes('kazi') ||
+    q.includes('fursa') ||
+    q.includes('mirimo') ||
+    q.includes('tic')
   ) {
     if (opportunities.length === 0) {
       return 'There are currently no published openings on the Partner Opportunity Board. Keep completing your virtual exchange capstones so your portfolio is ready when new roles arrive.';
@@ -140,7 +244,7 @@ export function generateParticipantFallback(
       })
       .sort((a, b) => b.score - a.score);
 
-    let res = `Here is how your declared skills (${user.skills.join(', ')}) and career goals match the active openings on the Partner Opportunity Board:\n\n`;
+    let res = `${loc.oppHeader} (${user.skills.join(', ')})\n\n`;
     ranked.forEach(({ opp, matchedSkills, regionMatch }, idx) => {
       res += `${idx + 1}. ${opp.title} — ${opp.partnerName}\n`;
       res += `   • Format & Pay: ${opp.type} · ${opp.locationType} (${opp.region}) · ${opp.stipendOrSalary}\n`;
@@ -153,7 +257,7 @@ export function generateParticipantFallback(
       res += `   • Overview: ${opp.description}\n\n`;
     });
 
-    res += `Consent Status Reminder: Your explicit portfolio sharing consent is currently ${
+    res += `${loc.consentReminder} ${
       user.consentDataSharing ? 'GRANTED' : 'WITHHELD'
     }. ${
       user.consentDataSharing
@@ -185,7 +289,7 @@ export function generateParticipantFallback(
       })
       .sort((a, b) => Number(b.interestMatch) - Number(a.interestMatch));
 
-    let res = `Here is a breakdown of the virtual learning exchanges currently in the YEP catalogue relative to your profile:\n\n`;
+    let res = `${loc.exchangeHeader}\n\n`;
     scored.forEach(({ exc, isEnrolled, seatsLeft, interestMatch }, idx) => {
       res += `${idx + 1}. ${exc.title} (${exc.skillLevel} · ${exc.format})\n`;
       res += `   • Theme & Facilitator: ${exc.theme} · Led by ${exc.facilitatorName} (${exc.facilitatorOrg})\n`;
@@ -215,7 +319,7 @@ export function generateParticipantFallback(
     q.includes('submission') ||
     q.includes('evaluat')
   ) {
-    let res = `Practical capstone submissions in YEP are evaluated by your assigned mentor using a standardized 1 to 5 rubric with equal 25% weight across four pillars:\n\n`;
+    let res = `${loc.rubricHeader}\n\n`;
     res += `1. Technical Execution & Architecture (25%): Clean modular structure, repository setup, and reliable engineering practices.\n`;
     res += `2. Problem Solving & Offline Adaptation (25%): Handling intermittent connectivity, caching, and low-bandwidth edge cases.\n`;
     res += `3. Practical Community & Industry Impact (25%): Relevance and tangible usefulness to real regional or digital challenges.\n`;
@@ -237,14 +341,14 @@ export function generateParticipantFallback(
   }
 
   if (q.includes('consent') || q.includes('privacy') || q.includes('data') || q.includes('share')) {
-    return `YEP follows strict consent-driven portfolio sharing rules:\n\n` +
+    return `${loc.consentHeader}\n\n` +
       `• Private by Default: Employers and partners never see your personal details, project links, or mentor rubric scores unless you explicitly opt in.\n` +
       `• Your Current Setting: Partner Data Consent is currently ${user.consentDataSharing ? 'ENABLED (Granted)' : 'DISABLED (Withheld)'}.\n` +
       `• Per-Application Control: When you click "Express Interest" on any Partner Opportunity Board listing, you choose explicitly whether to attach your verified capstone snapshot and rubric ratings for that employer.\n` +
       `• Zero-PII Reporting: Programme administrators only export anonymized aggregate statistics for monitoring and evaluation.`;
   }
 
-  return `Hello ${user.name.split(' ')[0]}! I am your YEP Opportunity & Project Advisor, connected directly to the live platform data.\n\n` +
+  return `${loc.hello} ${user.name.split(' ')[0]}! ${loc.advisorIntro}\n\n` +
     `Right now, there are ${opportunities.length} open partner opportunities and ${exchanges.length} virtual learning exchanges in the system, and you are actively enrolled in ${enrollments.length} cohort${enrollments.length === 1 ? '' : 's'}.\n\n` +
     `Try asking me:\n` +
     `• "Which partner jobs or internships match my skills (${user.skills.slice(0, 3).join(', ')})?"\n` +
@@ -256,8 +360,10 @@ export function generateParticipantFallback(
 export function generateMentorFallback(
   message: string,
   context: MentorAIContext,
-  targetGroupSize = 3
+  targetGroupSize = 3,
+  language: LanguageCode = 'en'
 ): string {
+  const loc = AI_LOCALE_TEXT[language] || AI_LOCALE_TEXT.en;
   const q = message.toLowerCase();
   const participants = context.cohortParticipants || [];
 
@@ -286,7 +392,7 @@ export function generateMentorFallback(
       squads[idx % groupCount].push(p);
     });
 
-    let res = `Based on the skills, competency tiers, and cohort progress of your ${participants.length} assigned participants, here is a balanced ${effectiveSize}-person squad plan:\n\n`;
+    let res = `${loc.squadHeader} (${participants.length} participants, size ~${effectiveSize}):\n\n`;
 
     squads.forEach((squad, idx) => {
       const squadName = `Squad ${String.fromCharCode(65 + idx)}`;
@@ -307,7 +413,7 @@ export function generateMentorFallback(
       }\n\n`;
     });
 
-    res += `Tip: You can change the Squad Size dropdown (Pairs of 2, Triads of 3, or Squads of 4) and click "Generate Balanced Project Groups" again to test alternative configurations.`;
+    res += loc.footerTip;
     return res;
   }
 
@@ -328,7 +434,7 @@ export function generateMentorFallback(
       p => (p.averageScore !== null && p.averageScore < 3.5) || p.progress < 40 || p.level === 'Beginner'
     );
 
-    let res = `Here is a targeted readiness assessment across your ${participants.length} cohort participants:\n\n`;
+    let res = `${loc.readinessHeader} (${participants.length})\n\n`;
     res += `Interview-Ready / High-Readiness Candidates:\n`;
     if (highPerformers.length > 0) {
       highPerformers.forEach(p => {
@@ -361,7 +467,7 @@ export function generateMentorFallback(
       ? (gradedSubs.reduce((acc, p) => acc + (p.rubricScores?.[key] || 0), 0) / gradedSubs.length).toFixed(2)
       : fallback.toFixed(2);
 
-  return `Cohort Skills, Level & Competency Diagnostic (${total} Enrolled Participants)\n\n` +
+  return `${loc.evalHeader} (${total} Enrolled Participants)\n\n` +
     `1. Skill Level Breakdown:\n` +
     `• Advanced Tier: ${advanced.length} (${total ? Math.round((advanced.length / total) * 100) : 0}%) — ${advanced.map(p => p.name).join(', ') || 'None yet'}\n` +
     `• Intermediate Tier: ${intermediates.length} (${total ? Math.round((intermediates.length / total) * 100) : 0}%) — ${intermediates.map(p => p.name).join(', ') || 'None yet'}\n` +

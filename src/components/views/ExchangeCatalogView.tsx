@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useYep } from '../../context/YepContext';
+import { useLanguage } from '../../context/LanguageContext';
 import { VirtualExchange, ExchangeTheme, SkillLevel, ExchangeFormat } from '../../types/yep';
 import { UserAvatar } from '../common/UserAvatar';
 import {
@@ -23,6 +24,7 @@ export const ExchangeCatalogView: React.FC<ExchangeCatalogViewProps> = ({
   onOpenOfflinePack
 }) => {
   const { exchanges, enrollments, currentUser, enrollInExchange, isLowBandwidthMode } = useYep();
+  const { t } = useLanguage();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTheme, setSelectedTheme] = useState<string>('all');
@@ -77,7 +79,7 @@ export const ExchangeCatalogView: React.FC<ExchangeCatalogViewProps> = ({
               Virtual Exchange Discovery
             </div>
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
-              Virtual Exchanges & Learning Cohorts
+              {t('Virtual Exchanges & Learning Cohorts')}
             </h1>
             <p className="text-sm text-slate-600 mt-1 max-w-2xl">
               Capacity-governed virtual cohorts delivering practical technical skills, synchronous facilitator mentorship, and asynchronous offline bundles for intermittent connectivity.
@@ -134,7 +136,7 @@ export const ExchangeCatalogView: React.FC<ExchangeCatalogViewProps> = ({
 
         {/* Filter bars (Buttons / Segmented Tabs following §1.A) */}
         <div className="flex flex-wrap items-center gap-2 pt-1 text-xs">
-          <span className="text-slate-500 font-medium mr-1">Theme:</span>
+          <span className="text-slate-500 font-medium mr-1">{t('Theme:')}</span>
           <button
             onClick={() => setSelectedTheme('all')}
             className={`px-3 py-1 rounded-md transition-colors cursor-pointer ${
@@ -143,19 +145,19 @@ export const ExchangeCatalogView: React.FC<ExchangeCatalogViewProps> = ({
                 : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
             }`}
           >
-            All Themes
+            {t('All Themes')}
           </button>
-          {themes.map(t => (
+          {themes.map(tTheme => (
             <button
-              key={t}
-              onClick={() => setSelectedTheme(t)}
+              key={tTheme}
+              onClick={() => setSelectedTheme(tTheme)}
               className={`px-3 py-1 rounded-md transition-colors cursor-pointer ${
-                selectedTheme === t
+                selectedTheme === tTheme
                   ? 'bg-slate-900 text-white font-medium'
                   : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
               }`}
             >
-              {t}
+              {tTheme}
             </button>
           ))}
         </div>
@@ -163,7 +165,7 @@ export const ExchangeCatalogView: React.FC<ExchangeCatalogViewProps> = ({
         <div className="flex flex-wrap items-center gap-4 pt-2 border-t border-slate-100 text-xs">
           {/* Level Filter */}
           <div className="flex items-center gap-1.5">
-            <span className="text-slate-500 font-medium">Level:</span>
+            <span className="text-slate-500 font-medium">{t('Level:')}</span>
             {(['all', 'Beginner', 'Intermediate', 'Advanced'] as (string | SkillLevel)[]).map(lvl => (
               <button
                 key={lvl}
@@ -174,14 +176,14 @@ export const ExchangeCatalogView: React.FC<ExchangeCatalogViewProps> = ({
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
-                {lvl === 'all' ? 'All' : lvl}
+                {lvl === 'all' ? t('All') : t(lvl)}
               </button>
             ))}
           </div>
 
           {/* Format Filter */}
           <div className="flex items-center gap-1.5">
-            <span className="text-slate-500 font-medium">Format:</span>
+            <span className="text-slate-500 font-medium">{t('Format:')}</span>
             {(['all', '4-Week Cohort', 'Virtual Bootcamp', 'Weekend Sprint'] as (string | ExchangeFormat)[]).map(fmt => (
               <button
                 key={fmt}
@@ -192,7 +194,7 @@ export const ExchangeCatalogView: React.FC<ExchangeCatalogViewProps> = ({
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
-                {fmt === 'all' ? 'All' : fmt}
+                {fmt === 'all' ? t('All') : fmt}
               </button>
             ))}
           </div>
@@ -312,7 +314,7 @@ export const ExchangeCatalogView: React.FC<ExchangeCatalogViewProps> = ({
                       title="Download offline notes bundle"
                     >
                       <Download className="w-3 h-3" />
-                      <span>Study Notes</span>
+                      <span>{t('Study Notes')}</span>
                     </button>
                   </div>
 
@@ -333,7 +335,7 @@ export const ExchangeCatalogView: React.FC<ExchangeCatalogViewProps> = ({
                             : 'bg-slate-900 hover:bg-slate-800 text-white shadow-xs'
                         }`}
                       >
-                        {isFull ? 'Capacity Reached' : 'Enroll Now'}
+                        {isFull ? t('Capacity Reached') : t('Enroll Now')}
                       </button>
                     )}
                   </div>

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useYep } from '../../context/YepContext';
+import { useLanguage } from '../../context/LanguageContext';
 import { VirtualExchange } from '../../types/yep';
 import { UserAvatar } from '../common/UserAvatar';
 import {
@@ -31,6 +32,7 @@ export const ExchangeDetailModal: React.FC<ExchangeDetailModalProps> = ({
   onOpenOfflinePackModal
 }) => {
   const { currentUser, enrollments, enrollInExchange } = useYep();
+  const { t } = useLanguage();
   const [enrollMsg, setEnrollMsg] = useState<{ success: boolean; text: string } | null>(null);
 
   if (!isOpen || !exchange) return null;
@@ -241,7 +243,7 @@ export const ExchangeDetailModal: React.FC<ExchangeDetailModalProps> = ({
             className="inline-flex items-center gap-2 px-3 py-2 text-xs font-medium text-slate-700 hover:text-slate-900 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors cursor-pointer w-full sm:w-auto justify-center"
           >
             <Download className="w-3.5 h-3.5 text-slate-500" />
-            <span>Download Offline Study Bundle</span>
+            <span>{t('Download Offline Study Bundle')}</span>
           </button>
 
           <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
@@ -249,7 +251,7 @@ export const ExchangeDetailModal: React.FC<ExchangeDetailModalProps> = ({
               onClick={onClose}
               className="px-4 py-2 text-xs font-medium text-slate-600 hover:text-slate-800 transition-colors cursor-pointer"
             >
-              Close
+              {t('Close')}
             </button>
 
             {isEnrolled ? (
@@ -258,7 +260,7 @@ export const ExchangeDetailModal: React.FC<ExchangeDetailModalProps> = ({
                 className="px-5 py-2 text-xs font-semibold text-white bg-emerald-700 hover:bg-emerald-800 rounded-lg transition-colors cursor-pointer shadow-sm flex items-center gap-1.5"
               >
                 <Award className="w-3.5 h-3.5" />
-                <span>Submit Capstone Project</span>
+                <span>{t('Submit Capstone Project')}</span>
               </button>
             ) : (
               <button
@@ -271,7 +273,7 @@ export const ExchangeDetailModal: React.FC<ExchangeDetailModalProps> = ({
                 }`}
               >
                 <BookOpen className="w-3.5 h-3.5" />
-                <span>{isFull ? 'Cohort Full' : 'Enroll in Exchange'}</span>
+                <span>{isFull ? t('Cohort Full') : t('Enroll in Exchange')}</span>
               </button>
             )}
           </div>

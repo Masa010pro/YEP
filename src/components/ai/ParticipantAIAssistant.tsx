@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useYep } from '../../context/YepContext';
+import { useLanguage } from '../../context/LanguageContext';
 import { UserAvatar } from '../common/UserAvatar';
 import { generateParticipantFallback, ParticipantAIContext } from '../../utils/aiFallback';
 import {
@@ -35,6 +36,7 @@ export const ParticipantAIAssistant: React.FC = () => {
     submissions,
     achievements
   } = useYep();
+  const { language, languageOption, t } = useLanguage();
 
   const [isOpen, setIsOpen] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
@@ -66,22 +68,22 @@ export const ParticipantAIAssistant: React.FC = () => {
   const quickPrompts = [
     {
       icon: <Briefcase className="w-3.5 h-3.5 text-indigo-600" />,
-      label: 'Match partner jobs to my skills',
+      label: t('Match partner jobs to my skills'),
       prompt: 'Based on my declared skills and region, which open partner opportunities on the board match me best?'
     },
     {
       icon: <GraduationCap className="w-3.5 h-3.5 text-blue-600" />,
-      label: 'Recommend next virtual exchange',
+      label: t('Recommend next virtual exchange'),
       prompt: 'Which virtual learning exchange should I enroll in next to advance toward my career goals?'
     },
     {
       icon: <Award className="w-3.5 h-3.5 text-emerald-600" />,
-      label: 'How are capstone rubrics scored?',
+      label: t('How are capstone rubrics scored?'),
       prompt: 'Explain the 1-5 standardized rubric criteria and how my capstones are graded across the 4 competencies.'
     },
     {
       icon: <ShieldCheck className="w-3.5 h-3.5 text-amber-600" />,
-      label: 'Explain portfolio consent rules',
+      label: t('Explain portfolio consent rules'),
       prompt: 'How does explicit consent protect my portfolio data when expressing interest in partner jobs?'
     }
   ];
@@ -164,7 +166,9 @@ export const ParticipantAIAssistant: React.FC = () => {
         body: JSON.stringify({
           message: text,
           history: historyPayload,
-          context: participantContext
+          context: participantContext,
+          language,
+          languageName: languageOption.name
         })
       });
 
@@ -176,7 +180,7 @@ export const ParticipantAIAssistant: React.FC = () => {
       const assistantMsg: ChatMessage = {
         id: `ai-${Date.now()}`,
         sender: 'assistant',
-        text: data.reply || generateParticipantFallback(text, participantContext),
+        text: data.reply || generateParticipantFallback(text, participantContext, language),
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       };
       setMessages(prev => [...prev, assistantMsg]);
@@ -185,7 +189,7 @@ export const ParticipantAIAssistant: React.FC = () => {
       const fallbackMsg: ChatMessage = {
         id: `ai-${Date.now()}`,
         sender: 'assistant',
-        text: generateParticipantFallback(text, participantContext),
+        text: generateParticipantFallback(text, participantContext, language),
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       };
       setMessages(prev => [...prev, fallbackMsg]);
@@ -210,7 +214,7 @@ export const ParticipantAIAssistant: React.FC = () => {
             <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-emerald-500 rounded-full" />
           </div>
           <span className="text-xs font-bold pr-1 hidden sm:inline">
-            Ask YEP AI Advisor
+            {t('Ask YEP AI Advisor')}
           </span>
         </button>
       )}
@@ -232,13 +236,13 @@ export const ParticipantAIAssistant: React.FC = () => {
               </div>
               <div>
                 <div className="text-xs font-bold flex items-center gap-1.5">
-                  <span>Participant AI Advisor</span>
+                  <span>{t('Participant AI Advisor')}</span>
                   <span className="text-[10px] font-semibold text-emerald-300 bg-emerald-950/80 px-1.5 py-0.2 rounded border border-emerald-800">
-                    Grounded in System Data
+                    {t('Grounded in System Data')}
                   </span>
                 </div>
                 <div className="text-[11px] text-slate-400">
-                  Matching opportunities, exchanges, and capstone guidance
+                  {t('Matching opportunities, exchanges, and capstone guidance')}
                 </div>
               </div>
             </div>
@@ -264,7 +268,7 @@ export const ParticipantAIAssistant: React.FC = () => {
           {/* Quick Prompts Carousel */}
           <div className="p-2.5 bg-slate-50 border-b border-slate-200 overflow-x-auto shrink-0 flex items-center gap-2 no-scrollbar text-xs">
             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider shrink-0 pl-1">
-              Quick Inquiries:
+              {t('Quick Inquiries:')}
             </span>
             {quickPrompts.map((qp, idx) => (
               <button
@@ -323,7 +327,7 @@ export const ParticipantAIAssistant: React.FC = () => {
                 </div>
                 <div className="bg-white border border-slate-200 rounded-2xl rounded-tl-xs p-3.5 shadow-xs flex items-center gap-2 text-slate-500">
                   <RefreshCw className="w-3.5 h-3.5 animate-spin text-emerald-600" />
-                  <span className="text-[11px]">Analyzing opportunities & system records in natural language...</span>
+                  <span className="text-[11px]">{t('Analyzing opportunities & system records in natural language...')}</span>
                 </div>
               </div>
             )}
@@ -342,7 +346,7 @@ export const ParticipantAIAssistant: React.FC = () => {
               type="text"
               value={inputMessage}
               onChange={e => setInputMessage(e.target.value)}
-              placeholder="Ask anything about jobs, exchanges, capstone projects, rubrics..."
+              placeholder={t('Ask anything about jobs, exchanges, capstone projects, rubrics...')}
               className="flex-1 px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white text-slate-900 placeholder:text-slate-400"
               disabled={isLoading}
             />

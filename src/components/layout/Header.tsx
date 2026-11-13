@@ -4,6 +4,7 @@ import { useLanguage } from '../../context/LanguageContext';
 import { Wifi, WifiOff, RefreshCw, LogOut, LogIn, Pencil } from 'lucide-react';
 import { UserAvatar } from '../common/UserAvatar';
 import { LanguageSwitcher } from '../common/LanguageSwitcher';
+import { NotificationsPanel } from '../common/NotificationsPanel';
 
 export const Header: React.FC = () => {
   const {
@@ -194,6 +195,9 @@ export const Header: React.FC = () => {
                 <span>{t('Sync')} ({pendingSyncCount})</span>
               </button>
             )}
+
+            {/* Persistent Notifications Bell & Popover */}
+            {currentUser && <NotificationsPanel />}
 
             {/* Logged in User Profile & Sign Out button */}
             {currentUser ? (

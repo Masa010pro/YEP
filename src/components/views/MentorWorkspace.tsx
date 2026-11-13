@@ -1,9 +1,25 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
+import {
+  ResponsiveContainer,
+  ComposedChart,
+  BarChart,
+  Bar,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend
+} from 'recharts';
 import { useYep } from '../../context/YepContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { ProjectSubmission, RubricScores, VirtualSession } from '../../types/yep';
 import { UserAvatar } from '../common/UserAvatar';
 import { MentorAIAssistant } from '../ai/MentorAIAssistant';
+import {
+  computeParticipantStageSummary,
+  computeCohortStageAverage
+} from '../../utils/stageAnalytics';
 import {
   Calendar,
   CheckCircle,
@@ -23,7 +39,8 @@ import {
   Target,
   Layers,
   Check,
-  Pencil
+  Pencil,
+  UserCheck
 } from 'lucide-react';
 
 export const MentorWorkspace: React.FC = () => {
@@ -33,6 +50,7 @@ export const MentorWorkspace: React.FC = () => {
     exchanges,
     submissions,
     enrollments,
+    expressionsOfInterest,
     gradeSubmission,
     addSessionToExchange,
     openProfileEditor
@@ -50,6 +68,7 @@ export const MentorWorkspace: React.FC = () => {
   const [qualitativeFeedback, setQualitativeFeedback] = useState('');
   const [gradeSuccessMsg, setGradeSuccessMsg] = useState<string | null>(null);
   const [activeLevelFilter, setActiveLevelFilter] = useState<'All' | 'Beginner' | 'Intermediate' | 'Advanced'>('All');
+  const [selectedParticipantId, setSelectedParticipantId] = useState<string>('all');
 
   // Schedule session modal state
   const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
@@ -93,29 +112,82 @@ export const MentorWorkspace: React.FC = () => {
     };
   });
 
-  const totalCohortCount = Math.max(participantLevels.length, 1);
-  const beginnerList = participantLevels.filter(p => p.level === 'Beginner');
-  const intermediateList = participantLevels.filter(p => p.level === 'Intermediate');
-  const advancedList = participantLevels.filter(p => p.level === 'Advanced');
+  // Unique participants active across this mentor's cohorts (enrollments or submissions)
+  const monitoredParticipants = useMemo(() => {
+    const activeIds = new Set<string>([
+      ...assignedCohortEnrollments.map(e => e.participantId),
+      ...relevantSubmissions.map(s => s.participantId)
+    ]);
+    const matched = users.filter(u => u.role === 'participant' && activeIds.has(u.id));
+    return matched.length > 0 ? matched : users.filter(u => u.role === 'participant');
+  }, [users, assignedCohortEnrollments, relevantSubmissions]);
+
+  const participantStageSummaries = useMemo(
+    () =>
+      monitoredParticipants.map(u =>
+        computeParticipantStageSummary(u, enrollments, submissions, exchanges, expressionsOfInterest)
+      ),
+    [monitoredParticipants, enrollments, submissions, exchanges, expressionsOfInterest]
+  );
+
+  const cohortStageAverage = useMemo(
+    () => computeCohortStageAverage(participantStageSummaries),
+    [participantStageSummaries]
+  );
+
+  const selectedParticipantSummary = useMemo(
+    () =>
+      selectedParticipantId === 'all'
+        ? null
+        : participantStageSummaries.find(p => p.participantId === selectedParticipantId) || null,
+    [selectedParticipantId, participantStageSummaries]
+  );
+
+  const totalCohortCount = Math.max(participantStageSummaries.length, 1);
+  const beginnerList = participantStageSummaries.filter(p => p.skillLevel === 'Beginner');
+  const intermediateList = participantStageSummaries.filter(p => p.skillLevel === 'Intermediate');
+  const advancedList = participantStageSummaries.filter(p => p.skillLevel === 'Advanced');
 
   const beginnerPct = Math.round((beginnerList.length / totalCohortCount) * 100);
   const intermediatePct = Math.round((intermediateList.length / totalCohortCount) * 100);
   const advancedPct = Math.max(0, 100 - beginnerPct - intermediatePct);
 
-  // Rubric Competency averages across 4 pillars
-  const gradedWithScores = gradedQueue.filter(s => s.grade);
-  const avgTechnical = gradedWithScores.length > 0 
-    ? (gradedWithScores.reduce((acc, s) => acc + (s.grade?.rubricScores.technicalExecution || 0), 0) / gradedWithScores.length)
-    : 4.4;
-  const avgProblemSolving = gradedWithScores.length > 0
-    ? (gradedWithScores.reduce((acc, s) => acc + (s.grade?.rubricScores.problemSolving || 0), 0) / gradedWithScores.length)
-    : 4.2;
-  const avgImpact = gradedWithScores.length > 0
-    ? (gradedWithScores.reduce((acc, s) => acc + (s.grade?.rubricScores.practicalImpact || 0), 0) / gradedWithScores.length)
-    : 4.1;
-  const avgClarity = gradedWithScores.length > 0
-    ? (gradedWithScores.reduce((acc, s) => acc + (s.grade?.rubricScores.presentationClarity || 0), 0) / gradedWithScores.length)
-    : 4.5;
+  const stageGraphData = useMemo(
+    () =>
+      cohortStageAverage.stagePoints.map((pt, idx) => ({
+        stage: t(pt.shortLabel),
+        fullLabel: t(pt.label),
+        cohortAverage: pt.completion,
+        individualCompletion: selectedParticipantSummary
+          ? selectedParticipantSummary.stagePoints[idx]?.completion ?? 0
+          : pt.completion
+      })),
+    [cohortStageAverage, selectedParticipantSummary, t]
+  );
+
+  const competencyGraphData = useMemo(
+    () =>
+      cohortStageAverage.rubricPillars.map((p, idx) => ({
+        pillar: t(p.shortPillar),
+        cohortAverage: p.score,
+        individualScore: selectedParticipantSummary
+          ? selectedParticipantSummary.rubricPillars[idx]?.score ?? 0
+          : p.score
+      })),
+    [cohortStageAverage, selectedParticipantSummary, t]
+  );
+
+  const participantComparisonData = useMemo(
+    () =>
+      participantStageSummaries.map(s => ({
+        name: s.participantName.split(' ')[0],
+        fullName: s.participantName,
+        stagePct: s.overallStageProgressPct,
+        stageNumber: s.currentStageNumber,
+        level: s.skillLevel
+      })),
+    [participantStageSummaries]
+  );
 
   const openRubricModal = (sub: ProjectSubmission) => {
     setEvaluatingSub(sub);
@@ -256,348 +328,419 @@ export const MentorWorkspace: React.FC = () => {
         </div>
       </div>
 
-      {/* Participant Level & Competency Analytics Graphs */}
+      {/* Participant Stage, Level & Competency Analytics Graphs */}
       <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-xs space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-slate-100 pb-4">
           <div>
             <div className="flex items-center gap-2">
               <BarChart3 className="w-4 h-4 text-emerald-600" />
               <h2 className="text-base font-bold text-slate-900">
-                {t('Participant Level & Competency Analytics')}
+                {t('Participant Stage, Level & Competency Analytics')}
               </h2>
             </div>
             <p className="text-xs text-slate-500 mt-0.5">
-              {t('Real-time competency progression, skill tier distribution, and rubric mastery across your facilitated cohorts')}
+              {selectedParticipantSummary
+                ? `${t('Inspecting individual track for')} ${selectedParticipantSummary.participantName}`
+                : t('Viewing cohort average across all monitored participants — select any participant to view alone')}
             </p>
           </div>
 
-          {/* Level Filter Buttons */}
-          <div className="flex items-center gap-1.5 p-1 bg-slate-100 rounded-lg text-xs self-start sm:self-auto">
-            {(['All', 'Beginner', 'Intermediate', 'Advanced'] as const).map(lvl => (
+          {/* Average of All vs Individual Participant Selector */}
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="inline-flex items-center p-1 bg-slate-100 rounded-lg text-xs">
               <button
-                key={lvl}
-                onClick={() => setActiveLevelFilter(lvl)}
-                className={`px-2.5 py-1 rounded-md font-medium transition-colors cursor-pointer ${
-                  activeLevelFilter === lvl
+                type="button"
+                onClick={() => setSelectedParticipantId('all')}
+                className={`px-3 py-1 rounded-md font-medium transition-colors cursor-pointer ${
+                  selectedParticipantId === 'all'
                     ? 'bg-white text-slate-900 shadow-xs font-semibold'
                     : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
-                {t(lvl)}
+                {t('Average of All')}
               </button>
-            ))}
+              <button
+                type="button"
+                onClick={() => {
+                  if (selectedParticipantId === 'all' && participantStageSummaries[0]) {
+                    setSelectedParticipantId(participantStageSummaries[0].participantId);
+                  }
+                }}
+                className={`px-3 py-1 rounded-md font-medium transition-colors cursor-pointer ${
+                  selectedParticipantId !== 'all'
+                    ? 'bg-white text-slate-900 shadow-xs font-semibold'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                {t('Individual Alone')}
+              </button>
+            </div>
+
+            <select
+              aria-label={t('Select participant scope')}
+              value={selectedParticipantId}
+              onChange={e => setSelectedParticipantId(e.target.value)}
+              className="px-3 py-1.5 text-xs font-medium bg-white border border-slate-300 rounded-lg text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer"
+            >
+              <option value="all">
+                {t('All Participants (Cohort Average)')} ({participantStageSummaries.length})
+              </option>
+              {participantStageSummaries.map(p => (
+                <option key={p.participantId} value={p.participantId}>
+                  {p.participantName} — {t('Stage')} {p.currentStageNumber}/6 ({t(p.skillLevel)})
+                </option>
+              ))}
+            </select>
           </div>
         </div>
 
-        {/* 2-Column Visual Charts Grid */}
+        {/* Active Scope Summary Strip */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+          <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200">
+            <div className="text-slate-500">{t('Active Scope')}</div>
+            <div className="font-bold text-slate-900 mt-0.5 truncate">
+              {selectedParticipantSummary
+                ? selectedParticipantSummary.participantName
+                : `${t('Cohort Average')} (${cohortStageAverage.totalParticipants})`}
+            </div>
+            <div className="text-[11px] text-slate-500 mt-0.5">
+              {selectedParticipantSummary
+                ? selectedParticipantSummary.participantRegion
+                : t('Aggregated across cohort')}
+            </div>
+          </div>
+
+          <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200">
+            <div className="text-slate-500">{t('Current Stage')}</div>
+            <div className="font-bold text-emerald-700 font-mono tabular-nums text-base mt-0.5">
+              {selectedParticipantSummary
+                ? `${t('Stage')} ${selectedParticipantSummary.currentStageNumber} / 6`
+                : `${t('Avg')} ${cohortStageAverage.averageStageNumber} / 6`}
+            </div>
+            <div className="text-[11px] text-slate-500 truncate mt-0.5">
+              {selectedParticipantSummary
+                ? t(selectedParticipantSummary.currentStageLabel)
+                : `${cohortStageAverage.overallAveragePct}% ${t('stage track')}`}
+            </div>
+          </div>
+
+          <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200">
+            <div className="text-slate-500">{t('Skill Tier / Level')}</div>
+            <div className="font-bold text-slate-900 text-base mt-0.5">
+              {selectedParticipantSummary
+                ? t(selectedParticipantSummary.skillLevel)
+                : `${beginnerPct}% / ${intermediatePct}% / ${advancedPct}%`}
+            </div>
+            <div className="text-[11px] text-slate-500 mt-0.5">
+              {selectedParticipantSummary
+                ? `${selectedParticipantSummary.overallStageProgressPct}% ${t('overall completion')}`
+                : `${t('Beginner')} · ${t('Intermediate')} · ${t('Advanced')}`}
+            </div>
+          </div>
+
+          <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200">
+            <div className="text-slate-500">{t('Rubric Performance')}</div>
+            <div className="font-bold text-slate-900 font-mono tabular-nums text-base mt-0.5">
+              {selectedParticipantSummary
+                ? selectedParticipantSummary.meanRubricScore !== null
+                  ? `${selectedParticipantSummary.meanRubricScore} / 5.00`
+                  : t('Pending')
+                : `${cohortStageAverage.meanCohortRubricScore} / 5.00`}
+            </div>
+            <div className="text-[11px] text-slate-500 mt-0.5">
+              {selectedParticipantSummary
+                ? `${selectedParticipantSummary.gradedCount}/${selectedParticipantSummary.submissionCount} ${t('graded')}`
+                : t('Cohort rubric mean')}
+            </div>
+          </div>
+        </div>
+
+        {/* 2-Column Recharts Graphs */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Chart 1: Participant Level Distribution (Bar Graph & Proportions) */}
-          <div className="p-5 bg-slate-50/70 rounded-xl border border-slate-200/90 space-y-4">
-            <div className="flex items-center justify-between">
+          {/* Graph 1: Participant Stage Track (6 Stages) */}
+          <div className="p-5 bg-slate-50/70 rounded-xl border border-slate-200/90 space-y-3">
+            <div className="flex items-center justify-between gap-2">
               <div>
                 <div className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
-                  <Layers className="w-3.5 h-3.5 text-blue-600" />
-                  <span>{t('Participant Skill Tier Distribution')}</span>
+                  <TrendingUp className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>
+                    {selectedParticipantSummary
+                      ? `${t('Stage Track')}: ${selectedParticipantSummary.participantName}`
+                      : t('Cohort Average Stage Track (Stages 1–6)')}
+                  </span>
                 </div>
                 <div className="text-[11px] text-slate-500 mt-0.5">
-                  {t('Proportion of youth classified by verified capability & capstone mastery')}
+                  {selectedParticipantSummary
+                    ? t('Individual participant stage completion (%) compared to cohort average')
+                    : t('Average completion percentage across all 6 YEP pathway stages')}
                 </div>
               </div>
-              <span className="text-xs font-mono font-semibold text-slate-700 bg-white px-2 py-0.5 rounded border border-slate-200">
-                {participantLevels.length} {t('Total Monitored')}
+              <span className="text-[11px] font-mono tabular-nums font-semibold text-slate-700 bg-white px-2 py-0.5 rounded border border-slate-200 shrink-0">
+                {selectedParticipantSummary
+                  ? `${selectedParticipantSummary.overallStageProgressPct}%`
+                  : `${cohortStageAverage.overallAveragePct}% ${t('Avg')}`}
               </span>
             </div>
 
-            {/* Segmented Distribution Stack Bar */}
-            <div className="space-y-1.5">
-              <div className="h-4 w-full bg-slate-200 rounded-full overflow-hidden flex shadow-inner">
-                <div
-                  style={{ width: `${beginnerPct}%` }}
-                  title={`Beginner: ${beginnerPct}% (${beginnerList.length})`}
-                  className="bg-emerald-500 h-full transition-all duration-500 hover:opacity-90"
-                />
-                <div
-                  style={{ width: `${intermediatePct}%` }}
-                  title={`Intermediate: ${intermediatePct}% (${intermediateList.length})`}
-                  className="bg-blue-500 h-full transition-all duration-500 hover:opacity-90"
-                />
-                <div
-                  style={{ width: `${advancedPct}%` }}
-                  title={`Advanced: ${advancedPct}% (${advancedList.length})`}
-                  className="bg-purple-500 h-full transition-all duration-500 hover:opacity-90"
-                />
-              </div>
-
-              {/* Bar Graph Sub-Metrics */}
-              <div className="grid grid-cols-3 gap-2 pt-2 text-xs">
-                {/* Beginner */}
-                <div className="bg-white p-3 rounded-lg border border-slate-200 space-y-1">
-                  <div className="flex items-center justify-between">
-                    <span className="flex items-center gap-1.5 font-medium text-slate-700">
-                      <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block" />
-                      {t('Beginner')}
-                    </span>
-                    <span className="font-mono font-bold text-slate-900">{beginnerPct}%</span>
-                  </div>
-                  <div className="text-[11px] text-slate-500 font-mono">
-                    {beginnerList.length} {t('participants')}
-                  </div>
-                  <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
-                    <div className="bg-emerald-500 h-full rounded-full" style={{ width: `${beginnerPct}%` }} />
-                  </div>
-                </div>
-
-                {/* Intermediate */}
-                <div className="bg-white p-3 rounded-lg border border-slate-200 space-y-1">
-                  <div className="flex items-center justify-between">
-                    <span className="flex items-center gap-1.5 font-medium text-slate-700">
-                      <span className="w-2.5 h-2.5 rounded-full bg-blue-500 inline-block" />
-                      {t('Intermediate')}
-                    </span>
-                    <span className="font-mono font-bold text-slate-900">{intermediatePct}%</span>
-                  </div>
-                  <div className="text-[11px] text-slate-500 font-mono">
-                    {intermediateList.length} {t('participants')}
-                  </div>
-                  <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
-                    <div className="bg-blue-500 h-full rounded-full" style={{ width: `${intermediatePct}%` }} />
-                  </div>
-                </div>
-
-                {/* Advanced */}
-                <div className="bg-white p-3 rounded-lg border border-slate-200 space-y-1">
-                  <div className="flex items-center justify-between">
-                    <span className="flex items-center gap-1.5 font-medium text-slate-700">
-                      <span className="w-2.5 h-2.5 rounded-full bg-purple-500 inline-block" />
-                      {t('Advanced')}
-                    </span>
-                    <span className="font-mono font-bold text-slate-900">{advancedPct}%</span>
-                  </div>
-                  <div className="text-[11px] text-slate-500 font-mono">
-                    {advancedList.length} {t('participants')}
-                  </div>
-                  <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
-                    <div className="bg-purple-500 h-full rounded-full" style={{ width: `${advancedPct}%` }} />
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Level Progression Funnel Pipeline */}
-            <div className="pt-2 border-t border-slate-200/80 space-y-2">
-              <div className="text-[11px] font-semibold text-slate-700 uppercase tracking-wide">
-                {t('Cohort Progression Funnel')}
-              </div>
-              <div className="space-y-1.5 text-[11px]">
-                <div className="flex items-center justify-between text-slate-600">
-                  <span>{t('Enrolled & Initial Onboarding')}</span>
-                  <span className="font-mono font-semibold">100% ({assignedCohortEnrollments.length})</span>
-                </div>
-                <div className="w-full bg-slate-200 rounded-full h-2 overflow-hidden">
-                  <div className="bg-slate-700 h-full rounded-full" style={{ width: '100%' }} />
-                </div>
-
-                <div className="flex items-center justify-between text-slate-600 pt-1">
-                  <span>{t('Virtual Lab Attendance & Participation')}</span>
-                  <span className="font-mono font-semibold">86% ({Math.round(assignedCohortEnrollments.length * 0.86)})</span>
-                </div>
-                <div className="w-full bg-slate-200 rounded-full h-2 overflow-hidden">
-                  <div className="bg-blue-600 h-full rounded-full" style={{ width: '86%' }} />
-                </div>
-
-                <div className="flex items-center justify-between text-slate-600 pt-1">
-                  <span>{t('Capstone Submissions Completed')}</span>
-                  <span className="font-mono font-semibold">
-                    {Math.round((gradedQueue.length / totalCohortCount) * 100)}% ({gradedQueue.length})
-                  </span>
-                </div>
-                <div className="w-full bg-slate-200 rounded-full h-2 overflow-hidden">
-                  <div
-                    className="bg-emerald-600 h-full rounded-full"
-                    style={{ width: `${Math.round((gradedQueue.length / totalCohortCount) * 100)}%` }}
+            <div className="h-64 w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <ComposedChart data={stageGraphData} margin={{ top: 10, right: 12, left: -16, bottom: 4 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
+                  <XAxis
+                    dataKey="stage"
+                    tick={{ fontSize: 11, fill: '#475569' }}
+                    axisLine={{ stroke: '#cbd5e1' }}
+                    tickLine={false}
                   />
-                </div>
-              </div>
+                  <YAxis
+                    domain={[0, 100]}
+                    tick={{ fontSize: 11, fill: '#64748b' }}
+                    axisLine={false}
+                    tickLine={false}
+                    unit="%"
+                  />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: '#ffffff',
+                      borderColor: '#e2e8f0',
+                      borderRadius: '0.5rem',
+                      fontSize: '12px'
+                    }}
+                  />
+                  <Legend wrapperStyle={{ fontSize: '11px' }} />
+                  {selectedParticipantSummary ? (
+                    <>
+                      <Bar
+                        dataKey="individualCompletion"
+                        name={selectedParticipantSummary.participantName}
+                        fill="#059669"
+                        radius={[4, 4, 0, 0]}
+                        barSize={26}
+                      />
+                      <Line
+                        type="monotone"
+                        dataKey="cohortAverage"
+                        name={t('Cohort Average')}
+                        stroke="#2563eb"
+                        strokeWidth={2.5}
+                        dot={{ r: 3.5, fill: '#2563eb' }}
+                      />
+                    </>
+                  ) : (
+                    <Bar
+                      dataKey="cohortAverage"
+                      name={t('Cohort Average (%)')}
+                      fill="#2563eb"
+                      radius={[4, 4, 0, 0]}
+                      barSize={28}
+                    />
+                  )}
+                </ComposedChart>
+              </ResponsiveContainer>
             </div>
           </div>
 
-          {/* Chart 2: 4-Pillar Competency Mastery Bar Graph */}
-          <div className="p-5 bg-slate-50/70 rounded-xl border border-slate-200/90 space-y-4">
-            <div className="flex items-center justify-between">
+          {/* Graph 2: Level & Rubric Competency Graph */}
+          <div className="p-5 bg-slate-50/70 rounded-xl border border-slate-200/90 space-y-3">
+            <div className="flex items-center justify-between gap-2">
               <div>
                 <div className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
-                  <Target className="w-3.5 h-3.5 text-emerald-600" />
-                  <span>{t('Rubric Competency Mastery (1–5 Scale)')}</span>
+                  <Target className="w-3.5 h-3.5 text-blue-600" />
+                  <span>
+                    {selectedParticipantSummary
+                      ? `${t('Competency Profile')}: ${selectedParticipantSummary.participantName}`
+                      : t('Individual Stage % vs Cohort Rubric Mastery')}
+                  </span>
                 </div>
                 <div className="text-[11px] text-slate-500 mt-0.5">
-                  {t('Cohort aggregate score per standardized mentorship dimension')}
+                  {selectedParticipantSummary
+                    ? t('4-pillar rubric mastery (1–5) vs cohort average')
+                    : t('Participant-by-participant stage track (%) across monitored youth')}
                 </div>
               </div>
-              <span className="text-[11px] font-semibold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-                Target: &gt; 3.50
+              <span className="text-[11px] font-semibold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 shrink-0">
+                {selectedParticipantSummary
+                  ? t(selectedParticipantSummary.skillLevel)
+                  : `${cohortStageAverage.totalParticipants} ${t('participants')}`}
               </span>
             </div>
 
-            {/* 4 Dimension Progress Bars */}
-            <div className="space-y-3.5 text-xs">
-              {/* Dim 1: Technical Execution */}
-              <div className="space-y-1">
-                <div className="flex items-center justify-between">
-                  <span className="font-medium text-slate-800">
-                    1. Technical Execution & Architecture
-                  </span>
-                  <div className="flex items-center gap-1.5">
-                    <span className="font-mono font-bold text-slate-900">{Number(avgTechnical).toFixed(1)} / 5.0</span>
-                    <span className="text-[11px] text-slate-500 font-mono">({Math.round((Number(avgTechnical) / 5) * 100)}%)</span>
-                  </div>
-                </div>
-                <div className="relative w-full bg-slate-200 rounded-full h-2.5 overflow-hidden">
-                  {/* Benchmark target line at 70% (3.5 / 5) */}
-                  <div className="absolute top-0 bottom-0 left-[70%] w-0.5 bg-slate-400 z-10" title="Target baseline 70%" />
-                  <div
-                    className="bg-emerald-600 h-full rounded-full transition-all duration-500"
-                    style={{ width: `${(Number(avgTechnical) / 5) * 100}%` }}
-                  />
-                </div>
-                <div className="text-[10px] text-slate-500 flex justify-between">
-                  <span>Code quality, repository structure, error resiliency</span>
-                  <span>Benchmark: 3.50</span>
-                </div>
-              </div>
-
-              {/* Dim 2: Problem Solving */}
-              <div className="space-y-1">
-                <div className="flex items-center justify-between">
-                  <span className="font-medium text-slate-800">
-                    2. Problem Solving & Offline Adaptation
-                  </span>
-                  <div className="flex items-center gap-1.5">
-                    <span className="font-mono font-bold text-slate-900">{Number(avgProblemSolving).toFixed(1)} / 5.0</span>
-                    <span className="text-[11px] text-slate-500 font-mono">({Math.round((Number(avgProblemSolving) / 5) * 100)}%)</span>
-                  </div>
-                </div>
-                <div className="relative w-full bg-slate-200 rounded-full h-2.5 overflow-hidden">
-                  <div className="absolute top-0 bottom-0 left-[70%] w-0.5 bg-slate-400 z-10" />
-                  <div
-                    className="bg-blue-600 h-full rounded-full transition-all duration-500"
-                    style={{ width: `${(Number(avgProblemSolving) / 5) * 100}%` }}
-                  />
-                </div>
-                <div className="text-[10px] text-slate-500 flex justify-between">
-                  <span>Creative iteration under network constraints</span>
-                  <span>Benchmark: 3.50</span>
-                </div>
-              </div>
-
-              {/* Dim 3: Practical Impact */}
-              <div className="space-y-1">
-                <div className="flex items-center justify-between">
-                  <span className="font-medium text-slate-800">
-                    3. Practical Community & Industry Impact
-                  </span>
-                  <div className="flex items-center gap-1.5">
-                    <span className="font-mono font-bold text-slate-900">{Number(avgImpact).toFixed(1)} / 5.0</span>
-                    <span className="text-[11px] text-slate-500 font-mono">({Math.round((Number(avgImpact) / 5) * 100)}%)</span>
-                  </div>
-                </div>
-                <div className="relative w-full bg-slate-200 rounded-full h-2.5 overflow-hidden">
-                  <div className="absolute top-0 bottom-0 left-[70%] w-0.5 bg-slate-400 z-10" />
-                  <div
-                    className="bg-indigo-600 h-full rounded-full transition-all duration-500"
-                    style={{ width: `${(Number(avgImpact) / 5) * 100}%` }}
-                  />
-                </div>
-                <div className="text-[10px] text-slate-500 flex justify-between">
-                  <span>Relevance to local economies and digital gigs</span>
-                  <span>Benchmark: 3.50</span>
-                </div>
-              </div>
-
-              {/* Dim 4: Presentation Clarity */}
-              <div className="space-y-1">
-                <div className="flex items-center justify-between">
-                  <span className="font-medium text-slate-800">
-                    4. Presentation Clarity & Documentation
-                  </span>
-                  <div className="flex items-center gap-1.5">
-                    <span className="font-mono font-bold text-slate-900">{Number(avgClarity).toFixed(1)} / 5.0</span>
-                    <span className="text-[11px] text-slate-500 font-mono">({Math.round((Number(avgClarity) / 5) * 100)}%)</span>
-                  </div>
-                </div>
-                <div className="relative w-full bg-slate-200 rounded-full h-2.5 overflow-hidden">
-                  <div className="absolute top-0 bottom-0 left-[70%] w-0.5 bg-slate-400 z-10" />
-                  <div
-                    className="bg-purple-600 h-full rounded-full transition-all duration-500"
-                    style={{ width: `${(Number(avgClarity) / 5) * 100}%` }}
-                  />
-                </div>
-                <div className="text-[10px] text-slate-500 flex justify-between">
-                  <span>Structured README, demonstration videos, notes</span>
-                  <span>Benchmark: 3.50</span>
-                </div>
-              </div>
+            <div className="h-64 w-full">
+              {selectedParticipantSummary ? (
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={competencyGraphData} margin={{ top: 10, right: 12, left: -16, bottom: 4 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
+                    <XAxis
+                      dataKey="pillar"
+                      tick={{ fontSize: 11, fill: '#475569' }}
+                      axisLine={{ stroke: '#cbd5e1' }}
+                      tickLine={false}
+                    />
+                    <YAxis
+                      domain={[0, 5]}
+                      ticks={[0, 1, 2, 3, 4, 5]}
+                      tick={{ fontSize: 11, fill: '#64748b' }}
+                      axisLine={false}
+                      tickLine={false}
+                    />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: '#ffffff',
+                        borderColor: '#e2e8f0',
+                        borderRadius: '0.5rem',
+                        fontSize: '12px'
+                      }}
+                    />
+                    <Legend wrapperStyle={{ fontSize: '11px' }} />
+                    <Bar
+                      dataKey="individualScore"
+                      name={selectedParticipantSummary.participantName}
+                      fill="#0f172a"
+                      radius={[4, 4, 0, 0]}
+                      barSize={22}
+                    />
+                    <Bar
+                      dataKey="cohortAverage"
+                      name={t('Cohort Average')}
+                      fill="#94a3b8"
+                      radius={[4, 4, 0, 0]}
+                      barSize={22}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={participantComparisonData} margin={{ top: 10, right: 12, left: -16, bottom: 4 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
+                    <XAxis
+                      dataKey="name"
+                      tick={{ fontSize: 11, fill: '#475569' }}
+                      axisLine={{ stroke: '#cbd5e1' }}
+                      tickLine={false}
+                    />
+                    <YAxis
+                      domain={[0, 100]}
+                      tick={{ fontSize: 11, fill: '#64748b' }}
+                      axisLine={false}
+                      tickLine={false}
+                      unit="%"
+                    />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: '#ffffff',
+                        borderColor: '#e2e8f0',
+                        borderRadius: '0.5rem',
+                        fontSize: '12px'
+                      }}
+                    />
+                    <Legend wrapperStyle={{ fontSize: '11px' }} />
+                    <Bar
+                      dataKey="stagePct"
+                      name={t('Overall Stage Track (%)')}
+                      fill="#059669"
+                      radius={[4, 4, 0, 0]}
+                      barSize={32}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
             </div>
           </div>
         </div>
 
-        {/* Filtered Participant Tier Preview Cards */}
+        {/* Participant Skill Tier Filter + Selectable Participant Cards */}
         <div className="pt-2 border-t border-slate-100 space-y-3">
-          <div className="flex items-center justify-between text-xs">
-            <span className="font-semibold text-slate-800">
-              Assigned Youth in {activeLevelFilter === 'All' ? 'All Skill Tiers' : `${activeLevelFilter} Tier`}
-            </span>
-            <span className="text-slate-500 text-[11px]">
-              Showing {
-                activeLevelFilter === 'All'
-                  ? participantLevels.length
-                  : participantLevels.filter(p => p.level === activeLevelFilter).length
-              } of {participantLevels.length} participants
-            </span>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+            <div className="flex items-center gap-2">
+              <span className="font-semibold text-slate-800">
+                {t('Inspect Participant Level & Stage Track')}
+              </span>
+              {selectedParticipantSummary && (
+                <button
+                  type="button"
+                  onClick={() => setSelectedParticipantId('all')}
+                  className="text-[11px] text-emerald-700 hover:text-emerald-800 font-semibold underline cursor-pointer"
+                >
+                  {t('Reset to Average of All')}
+                </button>
+              )}
+            </div>
+
+            <div className="flex items-center gap-1.5 p-1 bg-slate-100 rounded-lg text-[11px] self-start sm:self-auto">
+              {(['All', 'Beginner', 'Intermediate', 'Advanced'] as const).map(lvl => (
+                <button
+                  key={lvl}
+                  type="button"
+                  onClick={() => setActiveLevelFilter(lvl)}
+                  className={`px-2 py-0.5 rounded font-medium transition-colors cursor-pointer ${
+                    activeLevelFilter === lvl
+                      ? 'bg-white text-slate-900 shadow-xs font-semibold'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  {t(lvl)}
+                </button>
+              ))}
+            </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-            {participantLevels
-              .filter(p => activeLevelFilter === 'All' || p.level === activeLevelFilter)
-              .map(p => (
-                <div
-                  key={p.enrollment.id}
-                  className="p-3 bg-slate-50/80 rounded-xl border border-slate-200 flex items-center justify-between gap-3 text-xs"
-                >
-                  <div className="flex items-center gap-2.5 min-w-0">
-                    <UserAvatar
-                      name={p.enrollment.participantName}
-                      role="participant"
-                      avatarUrl={users.find(u => u.id === p.enrollment.participantId)?.avatarUrl}
-                      size="sm"
-                    />
-                    <div className="min-w-0">
-                      <div className="font-bold text-slate-900 truncate">
-                        {p.enrollment.participantName}
-                      </div>
-                      <div className="text-[11px] text-slate-500 truncate">
-                        {p.exchange?.title || 'Enrolled Exchange'}
+            {participantStageSummaries
+              .filter(p => activeLevelFilter === 'All' || p.skillLevel === activeLevelFilter)
+              .map(p => {
+                const isSelected = selectedParticipantId === p.participantId;
+                return (
+                  <button
+                    key={p.participantId}
+                    type="button"
+                    onClick={() =>
+                      setSelectedParticipantId(prev =>
+                        prev === p.participantId ? 'all' : p.participantId
+                      )
+                    }
+                    className={`p-3 rounded-xl border flex items-center justify-between gap-3 text-xs text-left transition-all cursor-pointer ${
+                      isSelected
+                        ? 'bg-emerald-50/80 border-emerald-400 ring-1 ring-emerald-300'
+                        : 'bg-slate-50/80 border-slate-200 hover:border-slate-300 hover:bg-white'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <UserAvatar
+                        name={p.participantName}
+                        role="participant"
+                        avatarUrl={p.avatarUrl}
+                        size="sm"
+                      />
+                      <div className="min-w-0">
+                        <div className="font-bold text-slate-900 truncate flex items-center gap-1">
+                          <span className="truncate">{p.participantName}</span>
+                          {isSelected && <UserCheck className="w-3.5 h-3.5 text-emerald-700 shrink-0" />}
+                        </div>
+                        <div className="text-[11px] text-slate-500 truncate font-mono tabular-nums">
+                          {t('Stage')} {p.currentStageNumber}/6 · {p.overallStageProgressPct}%
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  <div className="text-right shrink-0">
-                    <span
-                      className={`inline-block text-[10px] font-semibold px-2 py-0.5 rounded border ${
-                        p.level === 'Advanced'
-                          ? 'bg-purple-50 text-purple-800 border-purple-200'
-                          : p.level === 'Intermediate'
-                          ? 'bg-blue-50 text-blue-800 border-blue-200'
-                          : 'bg-emerald-50 text-emerald-800 border-emerald-200'
-                      }`}
-                    >
-                      {t(p.level)}
-                    </span>
-                    <div className="text-[10px] font-mono text-slate-500 mt-0.5">
-                      {p.score ? `${p.score} / 5.0` : `${p.progress}% done`}
+                    <div className="text-right shrink-0">
+                      <span
+                        className={`inline-block text-[10px] font-semibold px-2 py-0.5 rounded border ${
+                          p.skillLevel === 'Advanced'
+                            ? 'bg-purple-50 text-purple-800 border-purple-200'
+                            : p.skillLevel === 'Intermediate'
+                            ? 'bg-blue-50 text-blue-800 border-blue-200'
+                            : 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                        }`}
+                      >
+                        {t(p.skillLevel)}
+                      </span>
+                      <div className="text-[10px] font-mono tabular-nums text-slate-500 mt-0.5">
+                        {p.meanRubricScore !== null ? `${p.meanRubricScore} / 5.0` : `${p.submissionCount} sub`}
+                      </div>
                     </div>
-                  </div>
-                </div>
-              ))}
+                  </button>
+                );
+              })}
           </div>
         </div>
       </div>

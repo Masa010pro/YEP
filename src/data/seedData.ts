@@ -6,7 +6,8 @@ import {
   PartnerOpportunity,
   ExpressionOfInterest,
   AuditLogEntry,
-  AchievementBadge
+  AchievementBadge,
+  AppNotification
 } from '../types/yep';
 
 import heroYouthImg from '../assets/images/yep_hero_youth_learning_1794428115627.jpg';
@@ -730,3 +731,77 @@ export const INITIAL_ACHIEVEMENTS: AchievementBadge[] = [
     iconName: 'Briefcase'
   }
 ];
+
+export const INITIAL_NOTIFICATIONS: AppNotification[] = [
+  {
+    id: 'notif-01',
+    recipientId: 'usr-part-01',
+    category: 'mentor_feedback',
+    title: 'Capstone Rubric Evaluated (4.75 / 5.00)',
+    message: 'Dr. Marcus Vance graded "Offline-First Logistics Inventory Service" with feedback across all 4 rubric pillars.',
+    createdAt: '2026-11-09T18:05:00Z',
+    readByUserIds: [],
+    targetTab: 'dashboard'
+  },
+  {
+    id: 'notif-02',
+    recipientId: 'usr-part-01',
+    category: 'submission',
+    title: 'Exchange Capstone Verified & Synced',
+    message: 'Your submission for Cloud-Native Web Architecture was synced cleanly to the mentor review queue.',
+    createdAt: '2026-11-08T15:25:00Z',
+    readByUserIds: ['usr-part-01'],
+    targetTab: 'dashboard'
+  },
+  {
+    id: 'notif-03',
+    recipientRole: 'participant',
+    category: 'opportunity',
+    title: 'New Partner Opening: Junior Cloud Infrastructure Associate',
+    message: 'AfriTech Horizons & Global Labs published a remote paid entry-level role matching React & Cloud skills.',
+    createdAt: '2026-11-10T09:00:00Z',
+    readByUserIds: [],
+    targetTab: 'opportunities'
+  },
+  {
+    id: 'notif-04',
+    recipientId: 'usr-mentor-01',
+    category: 'submission',
+    title: 'Pending Capstone Review: Kofi Mensah',
+    message: 'New practical capstone submission in AI & Data Analytics for Low-Bandwidth Environments awaits your 1–5 rubric review.',
+    createdAt: '2026-11-11T10:15:00Z',
+    readByUserIds: [],
+    targetTab: 'mentor'
+  },
+  {
+    id: 'notif-05',
+    recipientId: 'usr-mentor-01',
+    category: 'mentor_feedback',
+    title: 'Rubric Evaluation Logged for Amara Okafor',
+    message: 'Your 4.75 / 5.00 evaluation and feedback were published to Amara Okafor’s verified portfolio.',
+    createdAt: '2026-11-09T18:10:00Z',
+    readByUserIds: ['usr-mentor-01'],
+    targetTab: 'mentor'
+  },
+  {
+    id: 'notif-06',
+    recipientId: 'usr-partner-01',
+    category: 'opportunity',
+    title: 'New Consented Expression of Interest',
+    message: 'Amara Okafor expressed interest in Junior Cloud Infrastructure Associate and shared verified capstone scores.',
+    createdAt: '2026-11-11T14:30:00Z',
+    readByUserIds: [],
+    targetTab: 'partner-manage'
+  },
+  {
+    id: 'notif-07',
+    recipientRole: 'admin',
+    category: 'opportunity',
+    title: 'Partner Opportunity Compliance Check',
+    message: 'New partner openings and consented candidate expressions are logged in the immutable audit trail.',
+    createdAt: '2026-11-11T15:00:00Z',
+    readByUserIds: [],
+    targetTab: 'admin'
+  }
+];
+

@@ -1,4 +1,16 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
+import {
+  ResponsiveContainer,
+  ComposedChart,
+  Bar,
+  Line,
+  BarChart,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend
+} from 'recharts';
 import { useYep } from '../../context/YepContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { VirtualExchange, ProjectSubmission } from '../../types/yep';
@@ -18,10 +30,16 @@ import {
   FileCheck,
   Bot,
   Sparkles,
-  Pencil
+  Pencil,
+  TrendingUp,
+  Target
 } from 'lucide-react';
 import { UserAvatar } from '../common/UserAvatar';
 import { ParticipantAIAssistant } from '../ai/ParticipantAIAssistant';
+import {
+  computeParticipantStageSummary,
+  computeCohortStageAverage
+} from '../../utils/stageAnalytics';
 
 interface ParticipantDashboardProps {
   onSelectExchange: (exchange: VirtualExchange) => void;
@@ -36,9 +54,11 @@ export const ParticipantDashboard: React.FC<ParticipantDashboardProps> = ({
 }) => {
   const {
     currentUser,
+    users,
     exchanges,
     enrollments,
     submissions,
+    expressionsOfInterest,
     achievements,
     updateProfile,
     openProfileEditor,
@@ -47,6 +67,38 @@ export const ParticipantDashboard: React.FC<ParticipantDashboardProps> = ({
   const { t } = useLanguage();
 
   const [selectedSubmissionForReview, setSelectedSubmissionForReview] = useState<ProjectSubmission | null>(null);
+
+  const stageAnalytics = useMemo(() => {
+    if (!currentUser) return null;
+    const allParticipants = users.filter(u => u.role === 'participant');
+    const allSummaries = allParticipants.map(u =>
+      computeParticipantStageSummary(u, enrollments, submissions, exchanges, expressionsOfInterest)
+    );
+    const currentSummary =
+      allSummaries.find(s => s.participantId === currentUser.id) ||
+      computeParticipantStageSummary(currentUser, enrollments, submissions, exchanges, expressionsOfInterest);
+    const cohortAverage = computeCohortStageAverage(allSummaries);
+
+    const stageChartData = currentSummary.stagePoints.map((pt, idx) => ({
+      stage: t(pt.shortLabel),
+      fullLabel: t(pt.label),
+      participantCompletion: pt.completion,
+      cohortAverage: cohortAverage.stagePoints[idx]?.completion ?? 0
+    }));
+
+    const rubricChartData = currentSummary.rubricPillars.map((p, idx) => ({
+      pillar: t(p.shortPillar),
+      participantScore: p.score,
+      cohortAverage: cohortAverage.rubricPillars[idx]?.score ?? 0
+    }));
+
+    return {
+      currentSummary,
+      cohortAverage,
+      stageChartData,
+      rubricChartData
+    };
+  }, [currentUser, users, enrollments, submissions, exchanges, expressionsOfInterest, t]);
 
   if (!currentUser) return null;
 
@@ -177,6 +229,220 @@ export const ParticipantDashboard: React.FC<ParticipantDashboardProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Participant Current Stage & Track Graphs */}
+      {stageAnalytics && (
+        <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-xs space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+            <div>
+              <div className="flex items-center gap-2">
+                <TrendingUp className="w-4 h-4 text-emerald-600" />
+                <h2 className="text-base font-bold text-slate-900 tracking-tight">
+                  {t('My Current Stage & Learning Track')}
+                </h2>
+              </div>
+              <p className="text-xs text-slate-500 mt-0.5">
+                {t('Live progression across all 6 YEP pathway stages compared against the cohort baseline')}
+              </p>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2 text-xs">
+              <span className="px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-900 border border-emerald-200 font-semibold font-mono tabular-nums">
+                {t('Stage')} {stageAnalytics.currentSummary.currentStageNumber} / 6 · {t(stageAnalytics.currentSummary.currentStageLabel)}
+              </span>
+              <span className="px-2.5 py-1 rounded-lg bg-slate-100 text-slate-800 border border-slate-200 font-semibold">
+                {t('Tier')}: {t(stageAnalytics.currentSummary.skillLevel)}
+              </span>
+              <span className="px-2.5 py-1 rounded-lg bg-blue-50 text-blue-800 border border-blue-200 font-semibold font-mono tabular-nums">
+                {stageAnalytics.currentSummary.overallStageProgressPct}% {t('Overall')}
+              </span>
+            </div>
+          </div>
+
+          {/* 6-Stage Horizontal Milestone Track */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5">
+            {stageAnalytics.currentSummary.stagePoints.map(pt => {
+              const isCompleted = pt.completion >= 100;
+              const isCurrent = pt.stageNumber === stageAnalytics.currentSummary.currentStageNumber;
+              return (
+                <div
+                  key={pt.key}
+                  className={`p-3 rounded-xl border text-xs transition-colors ${
+                    isCurrent
+                      ? 'bg-emerald-50/70 border-emerald-300'
+                      : isCompleted
+                      ? 'bg-slate-50 border-slate-200'
+                      : 'bg-white border-slate-200/80'
+                  }`}
+                >
+                  <div className="flex items-center justify-between gap-1">
+                    <span
+                      className={`text-[10px] font-bold uppercase tracking-wide ${
+                        isCurrent
+                          ? 'text-emerald-800'
+                          : isCompleted
+                          ? 'text-slate-700'
+                          : 'text-slate-400'
+                      }`}
+                    >
+                      {t('Stage')} {pt.stageNumber}
+                    </span>
+                    <span className="font-mono tabular-nums text-[11px] font-bold text-slate-900">
+                      {pt.completion}%
+                    </span>
+                  </div>
+                  <div className="font-semibold text-slate-900 mt-1 truncate">
+                    {t(pt.label)}
+                  </div>
+                  <div className="w-full h-1.5 bg-slate-200 rounded-full mt-2 overflow-hidden">
+                    <div
+                      className={`h-full rounded-full ${
+                        isCurrent
+                          ? 'bg-emerald-600'
+                          : isCompleted
+                          ? 'bg-slate-800'
+                          : 'bg-blue-500'
+                      }`}
+                      style={{ width: `${pt.completion}%` }}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* 2-Column Recharts Visualizations */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Graph 1: Stage Progression Track vs Cohort Average */}
+            <div className="p-4 sm:p-5 bg-slate-50/70 rounded-xl border border-slate-200/90 space-y-3">
+              <div className="flex items-center justify-between gap-2">
+                <div>
+                  <h3 className="text-xs font-bold text-slate-900">
+                    {t('Stage Completion Track vs Cohort Average (%)')}
+                  </h3>
+                  <p className="text-[11px] text-slate-500">
+                    {t('Your stage milestones compared with all active participants')}
+                  </p>
+                </div>
+                <span className="text-[11px] font-mono tabular-nums text-slate-600 bg-white px-2 py-0.5 rounded border border-slate-200">
+                  {t('Cohort Avg')}: {stageAnalytics.cohortAverage.overallAveragePct}%
+                </span>
+              </div>
+
+              <div className="h-64 w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <ComposedChart data={stageAnalytics.stageChartData} margin={{ top: 10, right: 12, left: -16, bottom: 4 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
+                    <XAxis
+                      dataKey="stage"
+                      tick={{ fontSize: 11, fill: '#475569' }}
+                      axisLine={{ stroke: '#cbd5e1' }}
+                      tickLine={false}
+                    />
+                    <YAxis
+                      domain={[0, 100]}
+                      tick={{ fontSize: 11, fill: '#64748b' }}
+                      axisLine={false}
+                      tickLine={false}
+                      unit="%"
+                    />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: '#ffffff',
+                        borderColor: '#e2e8f0',
+                        borderRadius: '0.5rem',
+                        fontSize: '12px'
+                      }}
+                    />
+                    <Legend wrapperStyle={{ fontSize: '11px' }} />
+                    <Bar
+                      dataKey="participantCompletion"
+                      name={t('Your Stage Progress')}
+                      fill="#059669"
+                      radius={[4, 4, 0, 0]}
+                      barSize={26}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="cohortAverage"
+                      name={t('Cohort Average')}
+                      stroke="#2563eb"
+                      strokeWidth={2.5}
+                      dot={{ r: 3.5, fill: '#2563eb' }}
+                    />
+                  </ComposedChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+
+            {/* Graph 2: 4-Pillar Rubric Competency vs Cohort Average */}
+            <div className="p-4 sm:p-5 bg-slate-50/70 rounded-xl border border-slate-200/90 space-y-3">
+              <div className="flex items-center justify-between gap-2">
+                <div>
+                  <h3 className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+                    <Target className="w-3.5 h-3.5 text-emerald-600" />
+                    <span>{t('Rubric Competency Track (1–5 Scale)')}</span>
+                  </h3>
+                  <p className="text-[11px] text-slate-500">
+                    {stageAnalytics.currentSummary.meanRubricScore !== null
+                      ? t('Based on mentor rubric evaluations vs cohort mean')
+                      : t('Formative readiness trajectory ahead of formal rubric grading')}
+                  </p>
+                </div>
+                <span className="text-[11px] font-mono tabular-nums text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 font-semibold">
+                  {stageAnalytics.currentSummary.meanRubricScore !== null
+                    ? `${stageAnalytics.currentSummary.meanRubricScore} / 5.00`
+                    : t('Pending Grade')}
+                </span>
+              </div>
+
+              <div className="h-64 w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={stageAnalytics.rubricChartData} margin={{ top: 10, right: 12, left: -16, bottom: 4 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
+                    <XAxis
+                      dataKey="pillar"
+                      tick={{ fontSize: 11, fill: '#475569' }}
+                      axisLine={{ stroke: '#cbd5e1' }}
+                      tickLine={false}
+                    />
+                    <YAxis
+                      domain={[0, 5]}
+                      ticks={[0, 1, 2, 3, 4, 5]}
+                      tick={{ fontSize: 11, fill: '#64748b' }}
+                      axisLine={false}
+                      tickLine={false}
+                    />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: '#ffffff',
+                        borderColor: '#e2e8f0',
+                        borderRadius: '0.5rem',
+                        fontSize: '12px'
+                      }}
+                    />
+                    <Legend wrapperStyle={{ fontSize: '11px' }} />
+                    <Bar
+                      dataKey="participantScore"
+                      name={t('Your Score')}
+                      fill="#0f172a"
+                      radius={[4, 4, 0, 0]}
+                      barSize={22}
+                    />
+                    <Bar
+                      dataKey="cohortAverage"
+                      name={t('Cohort Average')}
+                      fill="#94a3b8"
+                      radius={[4, 4, 0, 0]}
+                      barSize={22}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Participant AI Advisor & Opportunity Matcher Spotlight */}
       <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-emerald-950 rounded-2xl p-6 text-white shadow-sm border border-slate-700/60 flex flex-col md:flex-row md:items-center justify-between gap-5">

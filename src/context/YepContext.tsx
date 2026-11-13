@@ -10,7 +10,9 @@ import {
   ExpressionOfInterest,
   AuditLogEntry,
   AchievementBadge,
-  VirtualSession
+  VirtualSession,
+  AppNotification,
+  NotificationCategory
 } from '../types/yep';
 import {
   INITIAL_USERS,
@@ -21,6 +23,7 @@ import {
   INITIAL_EXPRESSIONS_OF_INTEREST,
   INITIAL_AUDIT_LOGS,
   INITIAL_ACHIEVEMENTS,
+  INITIAL_NOTIFICATIONS,
   SEED_EXCHANGE_CLOUD_IMAGE
 } from '../data/seedData';
 
@@ -34,6 +37,12 @@ interface YepContextType {
   expressionsOfInterest: ExpressionOfInterest[];
   auditLogs: AuditLogEntry[];
   achievements: AchievementBadge[];
+  notifications: AppNotification[];
+  userNotifications: AppNotification[];
+  unreadNotificationCount: number;
+  markNotificationAsRead: (notificationId: string) => void;
+  markAllNotificationsAsRead: () => void;
+  dismissNotification: (notificationId: string) => void;
   
   // Navigation & UI state
   activeTab: string;
@@ -147,6 +156,11 @@ export const YepProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return saved ? JSON.parse(saved) : INITIAL_AUDIT_LOGS;
   });
 
+  const [notifications, setNotifications] = useState<AppNotification[]>(() => {
+    const saved = localStorage.getItem(`${STORAGE_KEY_PREFIX}notifications`);
+    return saved ? JSON.parse(saved) : INITIAL_NOTIFICATIONS;
+  });
+
   const [achievements] = useState<AchievementBadge[]>(() => INITIAL_ACHIEVEMENTS);
 
   // UI state
@@ -193,7 +207,73 @@ export const YepProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     localStorage.setItem(`${STORAGE_KEY_PREFIX}audit_logs`, JSON.stringify(auditLogs));
   }, [auditLogs]);
 
+  useEffect(() => {
+    localStorage.setItem(`${STORAGE_KEY_PREFIX}notifications`, JSON.stringify(notifications));
+  }, [notifications]);
+
   const currentUser = currentUserId ? users.find(u => u.id === currentUserId) || null : null;
+
+  // Helper to push persistent notification
+  const addNotification = (params: {
+    recipientId?: string;
+    recipientRole?: UserRole;
+    category: NotificationCategory;
+    title: string;
+    message: string;
+    targetTab?: string;
+  }) => {
+    const newNotif: AppNotification = {
+      id: `notif-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+      recipientId: params.recipientId,
+      recipientRole: params.recipientRole,
+      category: params.category,
+      title: params.title,
+      message: params.message,
+      createdAt: new Date().toISOString(),
+      readByUserIds: [],
+      dismissedByUserIds: [],
+      targetTab: params.targetTab
+    };
+    setNotifications(prev => [newNotif, ...prev]);
+  };
+
+  const markNotificationAsRead = (notificationId: string) => {
+    if (!currentUser) return;
+    setNotifications(prev =>
+      prev.map(n =>
+        n.id === notificationId && !n.readByUserIds.includes(currentUser.id)
+          ? { ...n, readByUserIds: [...n.readByUserIds, currentUser.id] }
+          : n
+      )
+    );
+  };
+
+  const markAllNotificationsAsRead = () => {
+    if (!currentUser) return;
+    setNotifications(prev =>
+      prev.map(n => {
+        const isForUser =
+          n.recipientId === currentUser.id ||
+          (!n.recipientId && (!n.recipientRole || n.recipientRole === currentUser.role));
+        if (isForUser && !n.readByUserIds.includes(currentUser.id)) {
+          return { ...n, readByUserIds: [...n.readByUserIds, currentUser.id] };
+        }
+        return n;
+      })
+    );
+  };
+
+  const dismissNotification = (notificationId: string) => {
+    if (!currentUser) return;
+    setNotifications(prev =>
+      prev.map(n => {
+        if (n.id !== notificationId) return n;
+        const dismissed = n.dismissedByUserIds || [];
+        if (dismissed.includes(currentUser.id)) return n;
+        return { ...n, dismissedByUserIds: [...dismissed, currentUser.id] };
+      })
+    );
+  };
 
   // Helper to log immutable audit entry
   const recordAudit = (actionType: AuditLogEntry['actionType'], targetEntity: string, details: string) => {
@@ -717,6 +797,26 @@ export const YepProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       `Participant ${currentUser.name} submitted capstone. Sync status: ${newSub.syncStatus.toUpperCase()}.`
     );
 
+    addNotification({
+      recipientId: currentUser.id,
+      category: 'submission',
+      title: isOffline ? 'Capstone Queued Offline' : `Capstone Submitted: ${exchange.title}`,
+      message: isOffline
+        ? `"${data.title}" was saved locally and will sync to ${exchange.facilitatorName}'s review queue once online.`
+        : `"${data.title}" entered ${exchange.facilitatorName}'s review queue for 1–5 rubric evaluation.`,
+      targetTab: 'dashboard'
+    });
+
+    if (!isOffline) {
+      addNotification({
+        recipientId: exchange.facilitatorId,
+        category: 'submission',
+        title: `New Submission from ${currentUser.name}`,
+        message: `"${data.title}" in ${exchange.title} is ready for standardized rubric evaluation.`,
+        targetTab: 'mentor'
+      });
+    }
+
     if (isOffline) {
       return {
         success: true,
@@ -732,23 +832,43 @@ export const YepProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const retryOfflineSubmissions = () => {
-    let syncedCount = 0;
-    setSubmissions(prev =>
-      prev.map(sub => {
-        if (sub.syncStatus === 'pending_sync') {
-          syncedCount++;
-          return { ...sub, syncStatus: 'synced', status: 'under_review' };
-        }
-        return sub;
-      })
-    );
+    const pendingItems = submissions.filter(sub => sub.syncStatus === 'pending_sync');
+    const syncedCount = pendingItems.length;
 
     if (syncedCount > 0) {
+      setSubmissions(prev =>
+        prev.map(sub =>
+          sub.syncStatus === 'pending_sync'
+            ? { ...sub, syncStatus: 'synced', status: 'under_review' }
+            : sub
+        )
+      );
+
       recordAudit(
         'PROJECT_SUBMITTED',
         `Resilient Sync Flush`,
         `Successfully flushed ${syncedCount} queued submissions from low-bandwidth local cache to mentor queue.`
       );
+
+      pendingItems.forEach(item => {
+        addNotification({
+          recipientId: item.participantId,
+          category: 'submission',
+          title: 'Offline Capstone Synced',
+          message: `"${item.title}" has been synced from your offline cache to the mentor review queue.`,
+          targetTab: 'dashboard'
+        });
+        const exc = exchanges.find(e => e.id === item.exchangeId);
+        if (exc) {
+          addNotification({
+            recipientId: exc.facilitatorId,
+            category: 'submission',
+            title: `Synced Submission from ${item.participantName}`,
+            message: `"${item.title}" in ${item.exchangeTitle} has synced and is awaiting rubric review.`,
+            targetTab: 'mentor'
+          });
+        }
+      });
     }
     return syncedCount;
   };
@@ -792,6 +912,16 @@ export const YepProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       `Submission:${submissionId} (${sub?.title || 'Capstone'})`,
       `Graded by ${currentUser.name}. Score: ${avg.toFixed(2)}/5.00. Dimensions: [Tech: ${rubricScores.technicalExecution}, Solv: ${rubricScores.problemSolving}, Imp: ${rubricScores.practicalImpact}, Pres: ${rubricScores.presentationClarity}]`
     );
+
+    if (sub) {
+      addNotification({
+        recipientId: sub.participantId,
+        category: 'mentor_feedback',
+        title: `Mentor Feedback Ready: ${avg.toFixed(2)} / 5.00`,
+        message: `${currentUser.name} evaluated "${sub.title}" (${sub.exchangeTitle}). Review your rubric breakdown and notes.`,
+        targetTab: 'dashboard'
+      });
+    }
   };
 
   // Opportunity & Partner
@@ -809,6 +939,13 @@ export const YepProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       `Opportunity:${newOpp.id} (${newOpp.title})`,
       `Published by ${currentUser.name} (${data.partnerName}). Type: ${newOpp.type}, Region: ${newOpp.region}`
     );
+    addNotification({
+      recipientRole: 'participant',
+      category: 'opportunity',
+      title: `New Partner Opportunity: ${newOpp.title}`,
+      message: `${data.partnerName} posted a ${newOpp.type} opening (${newOpp.locationType} · ${newOpp.stipendOrSalary}).`,
+      targetTab: 'opportunities'
+    });
   };
 
   const submitExpressionOfInterest = (opportunityId: string, consentGranted: boolean) => {
@@ -874,6 +1011,22 @@ export const YepProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       `Candidate: ${currentUser.name}. Explicit portfolio sharing consent: ${consentGranted ? 'GRANTED' : 'WITHHELD'}. Private portfolio protected by default.`
     );
 
+    addNotification({
+      recipientId: opp.partnerId,
+      category: 'opportunity',
+      title: `New Candidate Expression of Interest`,
+      message: `${currentUser.name} applied for ${opp.title} (${consentGranted ? 'verified portfolio shared' : 'consent withheld'}).`,
+      targetTab: 'partner-manage'
+    });
+
+    addNotification({
+      recipientId: currentUser.id,
+      category: 'opportunity',
+      title: `Application Sent: ${opp.title}`,
+      message: `Your expression of interest was delivered to ${opp.partnerName}.`,
+      targetTab: 'opportunities'
+    });
+
     return {
       success: true,
       message: consentGranted
@@ -884,6 +1037,7 @@ export const YepProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const sendApplicantMessage = (eoiId: string, message: string) => {
     if (!currentUser) return;
+    const targetEoi = expressionsOfInterest.find(e => e.id === eoiId);
     const isPartner = currentUser.role === 'partner' || currentUser.role === 'admin';
     const msgId = `msg-${Date.now()}`;
     const newMsg = {
@@ -905,6 +1059,16 @@ export const YepProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         return eoi;
       })
     );
+
+    if (targetEoi) {
+      addNotification({
+        recipientId: isPartner ? targetEoi.participantId : targetEoi.partnerId,
+        category: 'opportunity',
+        title: `Message on ${targetEoi.opportunityTitle}`,
+        message: `${currentUser.name}: "${message.slice(0, 90)}${message.length > 90 ? '...' : ''}"`,
+        targetTab: isPartner ? 'opportunities' : 'partner-manage'
+      });
+    }
   };
 
   const updateApplicantStatus = (
@@ -912,6 +1076,7 @@ export const YepProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     status: ExpressionOfInterest['status'],
     notes?: string
   ) => {
+    const targetEoi = expressionsOfInterest.find(e => e.id === eoiId);
     setExpressionsOfInterest(prev =>
       prev.map(eoi => {
         if (eoi.id === eoiId) {
@@ -924,6 +1089,24 @@ export const YepProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         return eoi;
       })
     );
+
+    if (targetEoi) {
+      const statusLabel =
+        status === 'interview_invited'
+          ? 'Interview Invited'
+          : status === 'reviewing'
+          ? 'Under Partner Review'
+          : status === 'declined'
+          ? 'Application Closed'
+          : 'Submitted';
+      addNotification({
+        recipientId: targetEoi.participantId,
+        category: 'opportunity',
+        title: `Opportunity Update: ${statusLabel}`,
+        message: `${targetEoi.partnerName} updated your application status for ${targetEoi.opportunityTitle}.`,
+        targetTab: 'opportunities'
+      });
+    }
   };
 
   // Moderation & Audit
@@ -1075,11 +1258,28 @@ export const YepProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setOpportunities(INITIAL_OPPORTUNITIES);
     setExpressionsOfInterest(INITIAL_EXPRESSIONS_OF_INTEREST);
     setAuditLogs(INITIAL_AUDIT_LOGS);
+    setNotifications(INITIAL_NOTIFICATIONS);
     setActiveTab('dashboard');
     localStorage.clear();
   };
 
   const pendingSyncCount = submissions.filter(s => s.syncStatus === 'pending_sync').length;
+
+  const userNotifications = currentUser
+    ? notifications
+        .filter(n => {
+          const isForUser =
+            n.recipientId === currentUser.id ||
+            (!n.recipientId && (!n.recipientRole || n.recipientRole === currentUser.role));
+          const isDismissed = n.dismissedByUserIds?.includes(currentUser.id);
+          return isForUser && !isDismissed;
+        })
+        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    : [];
+
+  const unreadNotificationCount = currentUser
+    ? userNotifications.filter(n => !n.readByUserIds.includes(currentUser.id)).length
+    : 0;
 
   return (
     <YepContext.Provider
@@ -1093,6 +1293,12 @@ export const YepProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         expressionsOfInterest,
         auditLogs,
         achievements,
+        notifications,
+        userNotifications,
+        unreadNotificationCount,
+        markNotificationAsRead,
+        markAllNotificationsAsRead,
+        dismissNotification,
         activeTab,
         setActiveTab,
         selectedExchangeId,

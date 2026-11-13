@@ -212,3 +212,19 @@ export interface AchievementBadge {
   earnedAt?: string;
   iconName: string;
 }
+
+export type NotificationCategory = 'submission' | 'mentor_feedback' | 'opportunity';
+
+export interface AppNotification {
+  id: string;
+  recipientId?: string;
+  recipientRole?: UserRole;
+  category: NotificationCategory;
+  title: string;
+  message: string;
+  createdAt: string;
+  readByUserIds: string[];
+  dismissedByUserIds?: string[];
+  targetTab?: string;
+}
+

@@ -930,10 +930,21 @@ export const MentorWorkspace: React.FC = () => {
             <div className="space-y-2">
               {assignedCohortEnrollments.map(enr => {
                 const partInfo = participantLevels.find(p => p.enrollment.id === enr.id);
+                const isSelected = selectedParticipantId === enr.participantId;
                 return (
-                  <div
+                  <button
                     key={enr.id}
-                    className="p-2.5 bg-slate-50 rounded-lg border border-slate-200 flex items-center justify-between gap-3"
+                    type="button"
+                    onClick={() =>
+                      setSelectedParticipantId(prev =>
+                        prev === enr.participantId ? 'all' : enr.participantId
+                      )
+                    }
+                    className={`w-full p-2.5 rounded-lg border flex items-center justify-between gap-3 text-left transition-colors cursor-pointer ${
+                      isSelected
+                        ? 'bg-emerald-50/70 border-emerald-300'
+                        : 'bg-slate-50 border-slate-200 hover:border-slate-300'
+                    }`}
                   >
                     <div className="flex items-center gap-2.5 min-w-0">
                       <UserAvatar
@@ -969,7 +980,7 @@ export const MentorWorkspace: React.FC = () => {
                         />
                       </div>
                     </div>
-                  </div>
+                  </button>
                 );
               })}
             </div>

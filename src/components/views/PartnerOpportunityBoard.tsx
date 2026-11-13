@@ -13,18 +13,21 @@ import {
   Send,
   ShieldAlert,
   ShieldCheck,
-  X
+  X,
+  Pencil
 } from 'lucide-react';
 
 export const PartnerOpportunityBoard: React.FC = () => {
   const {
     currentUser,
+    users,
     opportunities,
     expressionsOfInterest,
     publishOpportunity,
     submitExpressionOfInterest,
     sendApplicantMessage,
-    updateApplicantStatus
+    updateApplicantStatus,
+    openProfileEditor
   } = useYep();
   const { t } = useLanguage();
 
@@ -120,7 +123,15 @@ export const PartnerOpportunityBoard: React.FC = () => {
             </p>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2.5">
+            <button
+              type="button"
+              onClick={() => openProfileEditor(currentUser.id)}
+              className="px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 text-xs font-semibold rounded-lg transition-colors cursor-pointer flex items-center gap-1.5"
+            >
+              <Pencil className="w-3.5 h-3.5" />
+              <span>{t('Edit Profile')}</span>
+            </button>
             {isPartner && (
               <button
                 onClick={() => setIsPostingModalOpen(true)}
@@ -289,7 +300,12 @@ export const PartnerOpportunityBoard: React.FC = () => {
                     <div>
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                          <UserAvatar name={eoi.participantName} role="participant" size="xs" />
+                          <UserAvatar
+                            name={eoi.participantName}
+                            role="participant"
+                            avatarUrl={users.find(u => u.id === eoi.participantId)?.avatarUrl}
+                            size="xs"
+                          />
                           <span className="font-bold text-slate-900">{eoi.participantName}</span>
                         </div>
                         <span className="text-[11px] font-mono tabular-nums text-slate-500">
@@ -592,7 +608,12 @@ export const PartnerOpportunityBoard: React.FC = () => {
           <div className="relative w-full max-w-md h-[90vh] bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col">
             <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/70">
               <div className="flex items-center gap-3">
-                <UserAvatar name={activeEoiForChat.participantName} role="participant" size="sm" />
+                <UserAvatar
+                  name={activeEoiForChat.participantName}
+                  role="participant"
+                  avatarUrl={users.find(u => u.id === activeEoiForChat.participantId)?.avatarUrl}
+                  size="sm"
+                />
                 <div>
                   <h3 className="text-sm font-bold text-slate-900">
                     Candidate Secure Messaging

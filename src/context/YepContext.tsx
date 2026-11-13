@@ -64,7 +64,10 @@ interface YepContextType {
     careerGoal?: string;
     bio?: string;
   }) => { success: boolean; error?: string };
-  updateProfile: (data: Partial<UserProfile>) => void;
+  updateProfile: (data: Partial<UserProfile>, targetUserId?: string) => { success: boolean; error?: string };
+  editingProfileUserId: string | null;
+  openProfileEditor: (userId?: string) => void;
+  closeProfileEditor: () => void;
   toggleUserSuspension: (userId: string, reason: string) => void;
   
   // Exchange & Enrollment methods
@@ -151,6 +154,7 @@ export const YepProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [selectedExchangeId, setSelectedExchangeId] = useState<string | null>(null);
   const [isLowBandwidthMode, setIsLowBandwidthMode] = useState<boolean>(false);
   const [simulatedOffline, setSimulatedOffline] = useState<boolean>(false);
+  const [editingProfileUserId, setEditingProfileUserId] = useState<string | null>(null);
 
   // Sync to localStorage
   useEffect(() => {
@@ -343,16 +347,148 @@ export const YepProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return { success: true };
   };
 
-  const updateProfile = (data: Partial<UserProfile>) => {
-    if (!currentUser) return;
-    setUsers(prev => prev.map(u => (u.id === currentUser.id ? { ...u, ...data } : u)));
-    if (data.consentDataSharing !== undefined) {
-      recordAudit(
-        'CONSENT_GRANTED_EOI',
-        `User:${currentUser.id}`,
-        `Updated global partner portfolio sharing consent to: ${data.consentDataSharing ? 'GRANTED' : 'REVOKED'}`
+  const openProfileEditor = (userId?: string) => {
+    const targetId = userId || currentUser?.id || null;
+    if (targetId) {
+      setEditingProfileUserId(targetId);
+    }
+  };
+
+  const closeProfileEditor = () => {
+    setEditingProfileUserId(null);
+  };
+
+  const updateProfile = (data: Partial<UserProfile>, targetUserId?: string) => {
+    const resolvedId = targetUserId || currentUser?.id;
+    if (!resolvedId) {
+      return { success: false, error: 'No active user selected.' };
+    }
+
+    const existingUser = users.find(u => u.id === resolvedId);
+    if (!existingUser) {
+      return { success: false, error: 'User profile not found.' };
+    }
+
+    if (data.name !== undefined && !data.name.trim()) {
+      return { success: false, error: 'Full name cannot be empty.' };
+    }
+
+    if (data.email !== undefined) {
+      const trimmedEmail = data.email.trim().toLowerCase();
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(trimmedEmail)) {
+        return { success: false, error: 'Please provide a valid email address.' };
+      }
+      if (users.some(u => u.id !== resolvedId && u.email.toLowerCase() === trimmedEmail)) {
+        return { success: false, error: 'Another account already uses this email address.' };
+      }
+    }
+
+    if (existingUser.role === 'participant' && data.age !== undefined) {
+      if (Number.isNaN(data.age) || data.age < 18 || data.age > 35) {
+        return {
+          success: false,
+          error: 'Eligibility Requirement: Participants must remain between 18 and 35 years of age.'
+        };
+      }
+    }
+
+    const normalizedData: Partial<UserProfile> = {
+      ...data,
+      ...(data.name !== undefined ? { name: data.name.trim() } : {}),
+      ...(data.email !== undefined ? { email: data.email.trim().toLowerCase() } : {})
+    };
+
+    const nextName = normalizedData.name ?? existingUser.name;
+    const nextEmail = normalizedData.email ?? existingUser.email;
+    const nextRegion = normalizedData.region ?? existingUser.region;
+    const nextTitle = normalizedData.titleOrOrg ?? existingUser.titleOrOrg;
+    const nextAvatar =
+      'avatarUrl' in normalizedData ? normalizedData.avatarUrl : existingUser.avatarUrl;
+
+    setUsers(prev =>
+      prev.map(u => (u.id === resolvedId ? { ...u, ...normalizedData } : u))
+    );
+
+    // Keep linked records synchronized when personal identity details change
+    if (normalizedData.name !== undefined || normalizedData.email !== undefined || normalizedData.region !== undefined) {
+      setEnrollments(prev =>
+        prev.map(enr =>
+          enr.participantId === resolvedId ? { ...enr, participantName: nextName } : enr
+        )
+      );
+      setSubmissions(prev =>
+        prev.map(sub => {
+          let updated = sub;
+          if (sub.participantId === resolvedId) {
+            updated = {
+              ...updated,
+              participantName: nextName,
+              participantEmail: nextEmail,
+              participantRegion: nextRegion
+            };
+          }
+          if (sub.grade && sub.grade.mentorId === resolvedId) {
+            updated = {
+              ...updated,
+              grade: {
+                ...sub.grade,
+                mentorName: nextName
+              }
+            };
+          }
+          return updated;
+        })
+      );
+      setExpressionsOfInterest(prev =>
+        prev.map(eoi =>
+          eoi.participantId === resolvedId
+            ? {
+                ...eoi,
+                participantName: nextName,
+                participantEmail: nextEmail,
+                participantRegion: nextRegion
+              }
+            : eoi
+        )
       );
     }
+
+    if (
+      normalizedData.name !== undefined ||
+      normalizedData.titleOrOrg !== undefined ||
+      'avatarUrl' in normalizedData
+    ) {
+      setExchanges(prev =>
+        prev.map(exc =>
+          exc.facilitatorId === resolvedId
+            ? {
+                ...exc,
+                facilitatorName: nextName,
+                facilitatorTitle: nextTitle || exc.facilitatorTitle,
+                facilitatorAvatar: nextAvatar
+              }
+            : exc
+        )
+      );
+    }
+
+    if (data.consentDataSharing !== undefined && Object.keys(data).length === 1) {
+      recordAudit(
+        'CONSENT_GRANTED_EOI',
+        `User:${resolvedId}`,
+        `Updated global partner portfolio sharing consent to: ${data.consentDataSharing ? 'GRANTED' : 'REVOKED'}`
+      );
+    } else {
+      const updatedFields = Object.keys(normalizedData).join(', ');
+      recordAudit(
+        'PROFILE_UPDATED',
+        `User:${resolvedId} (${nextName})`,
+        `Profile updated (${updatedFields}) by ${currentUser?.name || nextName}.`
+      );
+    }
+
+    return { success: true };
   };
 
   const toggleUserSuspension = (userId: string, reason: string) => {
@@ -973,6 +1109,9 @@ export const YepProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         switchRole,
         registerUser,
         updateProfile,
+        editingProfileUserId,
+        openProfileEditor,
+        closeProfileEditor,
         toggleUserSuspension,
         enrollInExchange,
         withdrawFromExchange,

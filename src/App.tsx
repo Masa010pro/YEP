@@ -13,6 +13,7 @@ import { ExchangeDetailModal } from './components/views/ExchangeDetailModal';
 import { SubmissionModal } from './components/modals/SubmissionModal';
 import { OfflineStudyPackModal } from './components/modals/OfflineStudyPackModal';
 import { AuthModal } from './components/modals/AuthModal';
+import { EditProfileModal } from './components/modals/EditProfileModal';
 import { VirtualExchange } from './types/yep';
 
 const MainContent: React.FC = () => {
@@ -109,6 +110,9 @@ const MainContent: React.FC = () => {
         isOpen={isRegisterModalOpen}
         onClose={() => setIsRegisterModalOpen(false)}
       />
+
+      {/* Global Profile Editor Modal (All Roles) */}
+      <EditProfileModal />
     </div>
   );
 };

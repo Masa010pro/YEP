@@ -3,6 +3,7 @@ import { useYep } from '../../context/YepContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { AuditActionType } from '../../types/yep';
 import { UserAvatar } from '../common/UserAvatar';
+import { ImpactDashboard } from './ImpactDashboard';
 import {
   Shield,
   AlertTriangle,
@@ -17,7 +18,8 @@ import {
   Unlock,
   Eye,
   BarChart3,
-  X
+  X,
+  Pencil
 } from 'lucide-react';
 
 export const AdminControlCenter: React.FC = () => {
@@ -32,7 +34,8 @@ export const AdminControlCenter: React.FC = () => {
     auditLogs,
     toggleUserSuspension,
     moderateContent,
-    exportImpactReport
+    exportImpactReport,
+    openProfileEditor
   } = useYep();
   const { t } = useLanguage();
 
@@ -92,6 +95,7 @@ export const AdminControlCenter: React.FC = () => {
             <UserAvatar
               name={currentUser.name}
               role={currentUser.role}
+              avatarUrl={currentUser.avatarUrl}
               size="xl"
             />
             <div className="space-y-1">
@@ -112,7 +116,15 @@ export const AdminControlCenter: React.FC = () => {
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2.5">
+            <button
+              type="button"
+              onClick={() => openProfileEditor(currentUser.id)}
+              className="px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 text-xs font-semibold rounded-lg transition-colors cursor-pointer flex items-center gap-1.5"
+            >
+              <Pencil className="w-3.5 h-3.5" />
+              <span>{t('Edit Profile')}</span>
+            </button>
             <button
               onClick={() => exportImpactReport('csv')}
               className="px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-lg transition-colors cursor-pointer flex items-center gap-1.5 shadow-xs"
@@ -226,62 +238,52 @@ export const AdminControlCenter: React.FC = () => {
         </button>
       </div>
 
-      {/* VIEW 1: OVERVIEW */}
+      {/* VIEW 1: OVERVIEW (Recharts ImpactDashboard + Regional Breakdown) */}
       {activeAdminTab === 'overview' && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-xs">
-          {/* Regional distribution */}
-          <div className="bg-white rounded-xl border border-slate-200 p-6 space-y-4">
+        <div className="space-y-8">
+          <ImpactDashboard />
+
+          <div className="bg-white rounded-xl border border-slate-200 p-6 space-y-4 text-xs">
             <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
               <BarChart3 className="w-4 h-4 text-emerald-600" />
-              <span>Participant Regional Hub Distribution</span>
+              <span>{t('Participant Regional Hub Distribution')}</span>
             </h3>
             <p className="text-slate-500">
-              Aggregated enrollment distribution across targeted demographic hubs.
+              {t('Aggregated enrollment distribution across targeted demographic hubs.')}
             </p>
-            <div className="space-y-3 pt-2">
-              {[
-                { region: 'West Africa (Lagos, Accra)', count: 2, share: '66.7%' },
-                { region: 'North Africa (Cairo, Alexandria)', count: 1, share: '33.3%' },
-                { region: 'East Africa (Nairobi, Kigali)', count: 0, share: '0.0%' },
-                { region: 'Southern Africa (Johannesburg)', count: 0, share: '0.0%' }
-              ].map((item, idx) => (
-                <div key={idx} className="space-y-1">
-                  <div className="flex justify-between text-slate-700">
-                    <span className="font-medium">{item.region}</span>
-                    <span className="font-mono tabular-nums">{item.count} participants ({item.share})</span>
-                  </div>
-                  <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
-                    <div
-                      className="bg-emerald-600 h-full rounded-full"
-                      style={{ width: item.share }}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Theme Engagement Breakdown */}
-          <div className="bg-white rounded-xl border border-slate-200 p-6 space-y-4">
-            <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-              <FileText className="w-4 h-4 text-indigo-600" />
-              <span>Exchange Theme Capacity & Demand</span>
-            </h3>
-            <p className="text-slate-500">
-              Real-time capacity utilization against operational limits.
-            </p>
-            <div className="space-y-3 pt-2">
-              {exchanges.map(exc => (
-                <div key={exc.id} className="p-3 bg-slate-50 rounded-lg border border-slate-200 space-y-1.5">
-                  <div className="flex justify-between items-center">
-                    <span className="font-bold text-slate-900">{exc.theme}</span>
-                    <span className="font-mono tabular-nums text-slate-600">
-                      {exc.enrolledCount} / {exc.capacityMax} seats
-                    </span>
-                  </div>
-                  <div className="text-[11px] text-slate-500 line-clamp-1">{exc.title}</div>
-                </div>
-              ))}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+              {(() => {
+                const participantsList = users.filter(u => u.role === 'participant');
+                const totalP = Math.max(participantsList.length, 1);
+                const regions = [
+                  'East Africa',
+                  'West Africa',
+                  'North Africa',
+                  'Southern Africa'
+                ];
+                return regions.map((reg, idx) => {
+                  const count = participantsList.filter(u =>
+                    u.region.toLowerCase().includes(reg.toLowerCase())
+                  ).length;
+                  const share = `${((count / totalP) * 100).toFixed(1)}%`;
+                  return (
+                    <div key={idx} className="space-y-1">
+                      <div className="flex justify-between text-slate-700">
+                        <span className="font-medium">{reg}</span>
+                        <span className="font-mono tabular-nums">
+                          {count} {t('participants')} ({share})
+                        </span>
+                      </div>
+                      <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                        <div
+                          className="bg-emerald-600 h-full rounded-full transition-all"
+                          style={{ width: share }}
+                        />
+                      </div>
+                    </div>
+                  );
+                });
+              })()}
             </div>
           </div>
         </div>
@@ -411,7 +413,7 @@ export const AdminControlCenter: React.FC = () => {
                   <tr key={u.id} className="hover:bg-slate-50/70 transition-colors">
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2.5">
-                        <UserAvatar name={u.name} role={u.role} size="xs" />
+                        <UserAvatar name={u.name} role={u.role} avatarUrl={u.avatarUrl} size="xs" />
                         <div>
                           <div className="font-semibold text-slate-900">{u.name}</div>
                           <div className="text-[11px] text-slate-500">{u.email}</div>
@@ -452,26 +454,36 @@ export const AdminControlCenter: React.FC = () => {
                       )}
                     </td>
                     <td className="px-4 py-3 text-right">
-                      {u.id !== currentUser.id ? (
+                      <div className="inline-flex items-center justify-end gap-2">
                         <button
-                          onClick={() =>
-                            setSuspensionTargetUser({
-                              id: u.id,
-                              name: u.name,
-                              isSuspended: u.isSuspended
-                            })
-                          }
-                          className={`px-2.5 py-1 rounded text-xs font-medium cursor-pointer transition-colors ${
-                            u.isSuspended
-                              ? 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200'
-                              : 'bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200'
-                          }`}
+                          type="button"
+                          onClick={() => openProfileEditor(u.id)}
+                          className="px-2.5 py-1 rounded text-xs font-medium bg-slate-100 hover:bg-slate-200 text-slate-700 cursor-pointer transition-colors inline-flex items-center gap-1"
                         >
-                          {u.isSuspended ? 'Unlock Account' : 'Suspend Account'}
+                          <Pencil className="w-3 h-3" />
+                          <span>{t('Edit')}</span>
                         </button>
-                      ) : (
-                        <span className="text-[11px] text-slate-400 italic">Current Session</span>
-                      )}
+                        {u.id !== currentUser.id ? (
+                          <button
+                            onClick={() =>
+                              setSuspensionTargetUser({
+                                id: u.id,
+                                name: u.name,
+                                isSuspended: u.isSuspended
+                              })
+                            }
+                            className={`px-2.5 py-1 rounded text-xs font-medium cursor-pointer transition-colors ${
+                              u.isSuspended
+                                ? 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200'
+                                : 'bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200'
+                            }`}
+                          >
+                            {u.isSuspended ? 'Unlock Account' : 'Suspend Account'}
+                          </button>
+                        ) : (
+                          <span className="text-[11px] text-slate-400 italic">Current Session</span>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -519,6 +531,7 @@ export const AdminControlCenter: React.FC = () => {
             >
               <option value="all">All Action Types</option>
               <option value="USER_REGISTRATION">USER_REGISTRATION</option>
+              <option value="PROFILE_UPDATED">PROFILE_UPDATED</option>
               <option value="EXCHANGE_ENROLLED">EXCHANGE_ENROLLED</option>
               <option value="PROJECT_SUBMITTED">PROJECT_SUBMITTED</option>
               <option value="RUBRIC_EVALUATED">RUBRIC_EVALUATED</option>

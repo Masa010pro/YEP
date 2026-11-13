@@ -179,6 +179,7 @@ export interface ExpressionOfInterest {
 
 export type AuditActionType = 
   | 'USER_REGISTRATION'
+  | 'PROFILE_UPDATED'
   | 'EXCHANGE_ENROLLED'
   | 'EXCHANGE_CREATED'
   | 'SESSION_SCHEDULED'

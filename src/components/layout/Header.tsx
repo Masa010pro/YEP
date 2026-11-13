@@ -1,7 +1,7 @@
 import React from 'react';
 import { useYep } from '../../context/YepContext';
 import { useLanguage } from '../../context/LanguageContext';
-import { Wifi, WifiOff, RefreshCw, LogOut, LogIn } from 'lucide-react';
+import { Wifi, WifiOff, RefreshCw, LogOut, LogIn, Pencil } from 'lucide-react';
 import { UserAvatar } from '../common/UserAvatar';
 import { LanguageSwitcher } from '../common/LanguageSwitcher';
 
@@ -16,6 +16,7 @@ export const Header: React.FC = () => {
     setSimulatedOffline,
     pendingSyncCount,
     retryOfflineSubmissions,
+    openProfileEditor,
     logout
   } = useYep();
   const { t } = useLanguage();
@@ -29,18 +30,18 @@ export const Header: React.FC = () => {
 
   return (
     <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between gap-6 h-16">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between gap-3 h-16 min-w-0">
           {/* Zone 1: Single text element wordmark */}
           <button
             onClick={() => setActiveTab(currentUser ? (currentUser.role === 'admin' ? 'admin' : currentUser.role === 'mentor' ? 'mentor' : currentUser.role === 'partner' ? 'partner-manage' : 'dashboard') : 'login')}
-            className="text-lg font-bold tracking-tight text-slate-900 hover:text-emerald-700 transition-colors whitespace-nowrap shrink-0 text-left cursor-pointer"
+            className="text-base sm:text-lg font-bold tracking-tight text-slate-900 hover:text-emerald-700 transition-colors whitespace-nowrap truncate min-w-0 text-left cursor-pointer"
           >
             {t('Youth Empowerment Project')}
           </button>
 
-          {/* Zone 2: 4-5 single-line navigation links */}
-          <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-slate-600">
+          {/* Zone 2: Desktop single-line navigation links */}
+          <nav className="hidden xl:flex items-center gap-5 text-sm font-medium text-slate-600 shrink-0">
             {currentUser ? (
               <>
                 {currentUser.role === 'participant' && (
@@ -150,7 +151,7 @@ export const Header: React.FC = () => {
           </nav>
 
           {/* Zone 3: Controls, Language Switcher & User Actions */}
-          <div className="flex items-center gap-2.5 shrink-0">
+          <div className="flex items-center gap-2 shrink-0">
             {/* Global East African & English Language Switcher */}
             <LanguageSwitcher />
 
@@ -197,13 +198,26 @@ export const Header: React.FC = () => {
             {/* Logged in User Profile & Sign Out button */}
             {currentUser ? (
               <div className="flex items-center gap-2">
-                <div className="hidden sm:flex items-center gap-2 px-2.5 py-1 rounded-lg bg-slate-100 border border-slate-200 text-xs">
-                  <UserAvatar name={currentUser.name} role={currentUser.role} size="xs" />
-                  <span className="font-semibold text-slate-800">{currentUser.name}</span>
-                  <span className="text-[10px] uppercase font-bold text-slate-500 px-1 py-0.2 bg-white rounded border border-slate-200">
+                <button
+                  type="button"
+                  onClick={() => openProfileEditor(currentUser.id)}
+                  title={t('Edit Personal Profile')}
+                  className="flex items-center gap-2 px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-emerald-50 border border-slate-200 hover:border-emerald-300 text-xs transition-colors cursor-pointer"
+                >
+                  <UserAvatar
+                    name={currentUser.name}
+                    role={currentUser.role}
+                    avatarUrl={currentUser.avatarUrl}
+                    size="xs"
+                  />
+                  <span className="hidden sm:inline font-semibold text-slate-800 max-w-[120px] truncate">
+                    {currentUser.name}
+                  </span>
+                  <span className="hidden md:inline text-[10px] uppercase font-bold text-slate-500 px-1 py-0.2 bg-white rounded border border-slate-200">
                     {currentUser.role}
                   </span>
-                </div>
+                  <Pencil className="w-3 h-3 text-slate-400 shrink-0" />
+                </button>
 
                 <button
                   onClick={logout}
@@ -225,6 +239,76 @@ export const Header: React.FC = () => {
             )}
           </div>
         </div>
+
+        {/* Compact navigation bar for screens below xl (tablets, split panes, mobile) */}
+        {currentUser && (
+          <nav className="flex xl:hidden items-center gap-4 pb-2.5 pt-1 overflow-x-auto text-xs font-medium text-slate-600 border-t border-slate-100">
+            {currentUser.role === 'participant' && (
+              <button
+                onClick={() => setActiveTab('dashboard')}
+                className={`hover:text-slate-900 transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
+                  activeTab === 'dashboard' ? 'text-emerald-700 font-semibold' : ''
+                }`}
+              >
+                {t('My Dashboard')}
+              </button>
+            )}
+            {currentUser.role === 'mentor' && (
+              <button
+                onClick={() => setActiveTab('mentor')}
+                className={`hover:text-slate-900 transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
+                  activeTab === 'mentor' ? 'text-emerald-700 font-semibold' : ''
+                }`}
+              >
+                {t('Mentor Workspace')}
+              </button>
+            )}
+            {currentUser.role === 'partner' && (
+              <button
+                onClick={() => setActiveTab('partner-manage')}
+                className={`hover:text-slate-900 transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
+                  activeTab === 'partner-manage' ? 'text-emerald-700 font-semibold' : ''
+                }`}
+              >
+                {t('Talent Pipeline')}
+              </button>
+            )}
+            {currentUser.role === 'admin' && (
+              <button
+                onClick={() => setActiveTab('admin')}
+                className={`hover:text-slate-900 transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
+                  activeTab === 'admin' ? 'text-emerald-700 font-semibold' : ''
+                }`}
+              >
+                {t('Control Center')}
+              </button>
+            )}
+            <button
+              onClick={() => setActiveTab('exchanges')}
+              className={`hover:text-slate-900 transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
+                activeTab === 'exchanges' ? 'text-emerald-700 font-semibold' : ''
+              }`}
+            >
+              {t('Exchange Catalogue')}
+            </button>
+            <button
+              onClick={() => setActiveTab('opportunities')}
+              className={`hover:text-slate-900 transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
+                activeTab === 'opportunities' ? 'text-emerald-700 font-semibold' : ''
+              }`}
+            >
+              {t('Partner Board')}
+            </button>
+            <button
+              onClick={() => setActiveTab('landing')}
+              className={`hover:text-slate-900 transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
+                activeTab === 'landing' ? 'text-emerald-700 font-semibold' : ''
+              }`}
+            >
+              {t('Public Overview')}
+            </button>
+          </nav>
+        )}
       </div>
     </header>
   );

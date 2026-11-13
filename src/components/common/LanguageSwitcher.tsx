@@ -2,7 +2,11 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useLanguage } from '../../context/LanguageContext';
 import { Globe, ChevronDown, Check } from 'lucide-react';
 
-export const LanguageSwitcher: React.FC = () => {
+interface LanguageSwitcherProps {
+  variant?: 'compact' | 'prominent';
+}
+
+export const LanguageSwitcher: React.FC<LanguageSwitcherProps> = ({ variant = 'compact' }) => {
   const { language, setLanguage, languageOption, supportedLanguages, t } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
@@ -29,7 +33,7 @@ export const LanguageSwitcher: React.FC = () => {
   }, []);
 
   return (
-    <div className="relative" ref={dropdownRef}>
+    <div className="relative inline-block" ref={dropdownRef}>
       <button
         type="button"
         onClick={() => setIsOpen(prev => !prev)}
@@ -37,13 +41,33 @@ export const LanguageSwitcher: React.FC = () => {
         aria-expanded={isOpen}
         aria-label={t('Language')}
         title={`${t('Language')}: ${languageOption.name} (${languageOption.nativeName})`}
-        className="p-2 rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-medium flex items-center gap-1.5 transition-colors cursor-pointer"
+        className={
+          variant === 'prominent'
+            ? 'px-3.5 py-2 rounded-lg border border-emerald-300 bg-white hover:bg-emerald-50 text-slate-800 text-xs font-medium flex items-center gap-2 transition-colors shadow-sm cursor-pointer'
+            : 'px-2.5 py-1.5 rounded-lg border border-emerald-300 bg-emerald-50/70 hover:bg-emerald-100/80 text-emerald-950 text-xs font-medium flex items-center gap-1.5 transition-colors cursor-pointer'
+        }
       >
         <Globe className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
-        <span className="font-semibold tracking-tight">{languageOption.shortLabel}</span>
-        <span className="hidden xl:inline text-slate-500">· {languageOption.nativeName}</span>
+        {variant === 'prominent' ? (
+          <>
+            <span className="text-slate-500">{t('Language')}:</span>
+            <span className="font-semibold text-slate-900">
+              {languageOption.name}
+            </span>
+            <span className="font-mono text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-800 border border-emerald-200">
+              {languageOption.shortLabel}
+            </span>
+          </>
+        ) : (
+          <>
+            <span className="font-bold tracking-tight">{languageOption.shortLabel}</span>
+            <span className="hidden sm:inline text-emerald-800/90 truncate max-w-[90px]">
+              · {languageOption.nativeName}
+            </span>
+          </>
+        )}
         <ChevronDown
-          className={`w-3.5 h-3.5 text-slate-400 transition-transform ${
+          className={`w-3.5 h-3.5 text-emerald-700 transition-transform shrink-0 ${
             isOpen ? 'rotate-180' : ''
           }`}
         />
@@ -53,7 +77,9 @@ export const LanguageSwitcher: React.FC = () => {
         <div
           role="listbox"
           aria-label={t('Language')}
-          className="absolute right-0 mt-2 w-64 bg-white rounded-xl border border-slate-200 shadow-xl py-1.5 z-50"
+          className={`absolute mt-2 w-64 bg-white rounded-xl border border-slate-200 shadow-xl py-1.5 z-50 ${
+            variant === 'prominent' ? 'left-1/2 -translate-x-1/2' : 'right-0'
+          }`}
         >
           <div className="px-3 py-1.5 border-b border-slate-100 flex items-center justify-between">
             <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">

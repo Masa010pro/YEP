@@ -222,6 +222,7 @@ export const ExchangeDetailModal: React.FC<ExchangeDetailModalProps> = ({
             <UserAvatar
               name={exchange.facilitatorName}
               role="mentor"
+              avatarUrl={exchange.facilitatorAvatar}
               size="lg"
             />
             <div>

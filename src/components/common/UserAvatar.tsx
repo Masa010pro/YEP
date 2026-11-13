@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { UserRole } from '../../types/yep';
 
 interface UserAvatarProps {
   name: string;
   role?: UserRole;
+  avatarUrl?: string;
   size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
   className?: string;
 }
@@ -52,20 +53,38 @@ const sizeClasses = {
 export const UserAvatar: React.FC<UserAvatarProps> = ({
   name,
   role = 'participant',
+  avatarUrl,
   size = 'md',
   className = ''
 }) => {
+  const [hasImageError, setHasImageError] = useState(false);
+
+  useEffect(() => {
+    setHasImageError(false);
+  }, [avatarUrl]);
+
   const initials = getInitials(name);
   const theme = roleColorThemes[role] || roleColorThemes.participant;
   const sizeClass = sizeClasses[size] || sizeClasses.md;
+  const showCustomImage = Boolean(avatarUrl && avatarUrl.trim() && !hasImageError);
 
   return (
     <div
       aria-label={name}
       title={name}
-      className={`rounded-full flex items-center justify-center font-bold tracking-tight select-none border shrink-0 ${sizeClass} ${theme.bg} ${theme.text} ${theme.border} ${className}`}
+      className={`rounded-full flex items-center justify-center font-bold tracking-tight select-none border shrink-0 overflow-hidden ${sizeClass} ${theme.bg} ${theme.text} ${theme.border} ${className}`}
     >
-      <span className="font-mono">{initials}</span>
+      {showCustomImage ? (
+        <img
+          src={avatarUrl}
+          alt={name}
+          referrerPolicy="no-referrer"
+          onError={() => setHasImageError(true)}
+          className="w-full h-full object-cover"
+        />
+      ) : (
+        <span className="font-mono">{initials}</span>
+      )}
     </div>
   );
 };

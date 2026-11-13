@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useYep } from '../../context/YepContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { UserAvatar } from '../common/UserAvatar';
+import { LanguageSwitcher } from '../common/LanguageSwitcher';
 import {
   GraduationCap,
   UserCheck,
@@ -62,6 +63,9 @@ export const LoginView: React.FC<LoginViewProps> = ({ onOpenRegisterModal }) => 
           <p className="text-xs sm:text-sm text-slate-600 max-w-xl mx-auto">
             {t('Access capacity-governed virtual exchanges, standardized mentor rubrics, and consent-driven partner opportunity boards.')}
           </p>
+          <div className="pt-2 flex justify-center">
+            <LanguageSwitcher variant="prominent" />
+          </div>
         </div>
 
         {/* Central Sign In Form Card */}
@@ -154,7 +158,12 @@ export const LoginView: React.FC<LoginViewProps> = ({ onOpenRegisterModal }) => 
               >
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <UserAvatar name={participantDemo.name} role="participant" size="sm" />
+                    <UserAvatar
+                      name={participantDemo.name}
+                      role="participant"
+                      avatarUrl={participantDemo.avatarUrl}
+                      size="sm"
+                    />
                     <span className="text-[10px] font-semibold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
                       {t('Age 18–35')}
                     </span>
@@ -188,7 +197,12 @@ export const LoginView: React.FC<LoginViewProps> = ({ onOpenRegisterModal }) => 
               >
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <UserAvatar name={mentorDemo.name} role="mentor" size="sm" />
+                    <UserAvatar
+                      name={mentorDemo.name}
+                      role="mentor"
+                      avatarUrl={mentorDemo.avatarUrl}
+                      size="sm"
+                    />
                     <span className="text-[10px] font-semibold text-blue-800 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
                       {t('Facilitator')}
                     </span>
@@ -222,7 +236,12 @@ export const LoginView: React.FC<LoginViewProps> = ({ onOpenRegisterModal }) => 
               >
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <UserAvatar name={partnerDemo.name} role="partner" size="sm" />
+                    <UserAvatar
+                      name={partnerDemo.name}
+                      role="partner"
+                      avatarUrl={partnerDemo.avatarUrl}
+                      size="sm"
+                    />
                     <span className="text-[10px] font-semibold text-indigo-800 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200">
                       {t('Employer')}
                     </span>
@@ -256,7 +275,12 @@ export const LoginView: React.FC<LoginViewProps> = ({ onOpenRegisterModal }) => 
               >
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <UserAvatar name={adminDemo.name} role="admin" size="sm" />
+                    <UserAvatar
+                      name={adminDemo.name}
+                      role="admin"
+                      avatarUrl={adminDemo.avatarUrl}
+                      size="sm"
+                    />
                     <span className="text-[10px] font-semibold text-amber-800 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
                       {t('Admin')}
                     </span>

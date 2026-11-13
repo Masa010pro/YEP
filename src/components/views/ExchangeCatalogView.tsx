@@ -300,6 +300,7 @@ export const ExchangeCatalogView: React.FC<ExchangeCatalogViewProps> = ({
                       <UserAvatar
                         name={exchange.facilitatorName}
                         role="mentor"
+                        avatarUrl={exchange.facilitatorAvatar}
                         size="xs"
                       />
                       <span className="truncate max-w-[130px] font-medium">{exchange.facilitatorName}</span>

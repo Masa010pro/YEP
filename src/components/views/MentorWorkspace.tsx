@@ -22,17 +22,20 @@ import {
   Award,
   Target,
   Layers,
-  Check
+  Check,
+  Pencil
 } from 'lucide-react';
 
 export const MentorWorkspace: React.FC = () => {
   const {
     currentUser,
+    users,
     exchanges,
     submissions,
     enrollments,
     gradeSubmission,
-    addSessionToExchange
+    addSessionToExchange,
+    openProfileEditor
   } = useYep();
   const { t } = useLanguage();
 
@@ -180,6 +183,7 @@ export const MentorWorkspace: React.FC = () => {
             <UserAvatar
               name={currentUser.name}
               role={currentUser.role}
+              avatarUrl={currentUser.avatarUrl}
               size="xl"
             />
             <div className="space-y-1">
@@ -200,7 +204,15 @@ export const MentorWorkspace: React.FC = () => {
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2.5">
+            <button
+              type="button"
+              onClick={() => openProfileEditor(currentUser.id)}
+              className="px-3.5 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 text-xs font-semibold rounded-lg transition-colors cursor-pointer flex items-center gap-1.5"
+            >
+              <Pencil className="w-3.5 h-3.5" />
+              <span>{t('Edit Profile')}</span>
+            </button>
             <button
               onClick={() => setIsScheduleModalOpen(true)}
               className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-lg transition-colors cursor-pointer flex items-center gap-1.5 shadow-xs"
@@ -552,7 +564,12 @@ export const MentorWorkspace: React.FC = () => {
                   className="p-3 bg-slate-50/80 rounded-xl border border-slate-200 flex items-center justify-between gap-3 text-xs"
                 >
                   <div className="flex items-center gap-2.5 min-w-0">
-                    <UserAvatar name={p.enrollment.participantName} role="participant" size="sm" />
+                    <UserAvatar
+                      name={p.enrollment.participantName}
+                      role="participant"
+                      avatarUrl={users.find(u => u.id === p.enrollment.participantId)?.avatarUrl}
+                      size="sm"
+                    />
                     <div className="min-w-0">
                       <div className="font-bold text-slate-900 truncate">
                         {p.enrollment.participantName}
@@ -776,7 +793,12 @@ export const MentorWorkspace: React.FC = () => {
                     className="p-2.5 bg-slate-50 rounded-lg border border-slate-200 flex items-center justify-between gap-3"
                   >
                     <div className="flex items-center gap-2.5 min-w-0">
-                      <UserAvatar name={enr.participantName} role="participant" size="sm" />
+                      <UserAvatar
+                        name={enr.participantName}
+                        role="participant"
+                        avatarUrl={users.find(u => u.id === enr.participantId)?.avatarUrl}
+                        size="sm"
+                      />
                       <div className="min-w-0">
                         <div className="flex items-center gap-1.5">
                           <span className="font-semibold text-slate-900 truncate">{enr.participantName}</span>

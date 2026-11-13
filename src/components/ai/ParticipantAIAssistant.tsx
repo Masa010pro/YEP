@@ -315,7 +315,13 @@ export const ParticipantAIAssistant: React.FC = () => {
                 </div>
 
                 {msg.sender === 'user' && (
-                  <UserAvatar name={currentUser.name} role="participant" size="xs" className="mt-0.5" />
+                  <UserAvatar
+                    name={currentUser.name}
+                    role="participant"
+                    avatarUrl={currentUser.avatarUrl}
+                    size="xs"
+                    className="mt-0.5"
+                  />
                 )}
               </div>
             ))}
